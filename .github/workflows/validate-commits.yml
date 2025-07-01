@@ -1,0 +1,28 @@
+name: 🛡️ Validate Commit Messages
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check-commits:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: ⬢ Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 📦 Install Commitlint
+        run: |
+          npm install --save-dev @commitlint/{config-conventional,cli}
+
+      - name: 🔍 Validate commit messages
+        run: |
+          npx commitlint --from=HEAD~10 --to=HEAD --verbose
