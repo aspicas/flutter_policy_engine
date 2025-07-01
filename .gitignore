@@ -7,8 +7,6 @@
 .buildlog/
 .history
 
-
-
 # Flutter repo-specific
 /bin/cache/
 /bin/internal/bootstrap.bat
@@ -131,3 +129,6 @@ node_modules/
 
 # Archivos de sistema
 .DS_Store
+
+# FVM Version Cache
+.fvm/
