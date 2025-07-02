@@ -23,6 +23,6 @@ jobs:
         run: |
           npm install --save-dev @commitlint/{config-conventional,cli}
 
-      - name: 🔍 Validate commit messages
+      - name: 🔍 Validate commit messages (entire branch)
         run: |
-          npx commitlint --from=HEAD~10 --to=HEAD --verbose
+          npx commitlint --from=$(git rev-list --max-parents=0 HEAD) --to=HEAD --verbose
