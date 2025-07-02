@@ -25,5 +25,5 @@ jobs:
 
       - name: 🚀 Run semantic-release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Comes from GitHub
+          POLICY_TOKEN: ${{ secrets.POLICY_TOKEN }} # Comes from GitHub
         run: npx semantic-release
