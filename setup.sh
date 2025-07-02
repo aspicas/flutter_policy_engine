@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+git config commit.template commit-template.txt
+
 # Function to use flutter or fvm flutter
 flutter_cmd() {
   if command -v fvm &> /dev/null; then
