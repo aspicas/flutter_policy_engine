@@ -1,0 +1,26 @@
+{
+  "name": "flutter_policy_engine",
+  "version": "1.0.0",
+  "description": "flutter_policy_engine is a lightweight and extensible policy engine for Flutter that lets you define, manage, and evaluate access control rules declaratively using ABAC (Attribute-Based Access Control) or RBAC models.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\"",
+    "prepare": "husky"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.3",
+    "husky": "^9.1.7",
+    "semantic-release": "^24.2.6"
+  }
+}

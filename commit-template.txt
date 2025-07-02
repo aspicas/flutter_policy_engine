@@ -1,0 +1,41 @@
+# Write your commit message using the Conventional Commits format.
+#
+# Format:
+#   <type>(<scope>)!: <short summary>
+#
+# Common types:
+#   feat:      a new feature
+#   fix:       a bug fix
+#   docs:      documentation only changes
+#   style:     changes that do not affect code meaning (formatting, etc.)
+#   refactor:  code change that neither fixes a bug nor adds a feature
+#   test:      adding or updating tests
+#   chore:     other changes that don't modify src or test files
+#
+# Use "!" after the type or scope to indicate a BREAKING CHANGE.
+#
+# Examples:
+#   feat!: drop support for Node 12
+#   refactor(auth)!: change token structure
+#   fix(ui): correct layout on iOS
+#   docs(readme): add usage instructions
+#
+# Optional body:
+#   - Explain the motivation for the change
+#   - Highlight what changed
+#
+# BREAKING CHANGE (in body, if needed):
+# Add a line that starts with "BREAKING CHANGE:" followed by the explanation.
+#
+# Example with body and breaking change:
+#
+#   feat(auth)!: switch to OAuth 2.1
+#
+#   This update replaces the old token system with OAuth 2.1 for better security.
+#
+#   BREAKING CHANGE: Old refresh tokens will no longer work.
+#
+# Guidelines:
+# - Keep the subject line under 72 characters.
+# - Use the imperative mood: "add", not "added" or "adds".
+# - Leave a blank line between subject, body, and footer (if any).
