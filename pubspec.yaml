@@ -1,10 +1,23 @@
 name: flutter_policy_engine
 description: "A new Flutter package project."
 version: 0.0.1
-homepage:
+# homepage: https://github.com/davidgarcia93/flutter_policy_engine
+repository: https://github.com/davidgarcia93/flutter_policy_engine
+issue_tracker: https://github.com/davidgarcia93/flutter_policy_engine/issues
+documentation: https://github.com/davidgarcia93/flutter_policy_engine#readme
+topics:
+  - flutter
+  - policy
+  - engine
+  - authorization
+publish_to: "https://pub.dev"
+# funding:
+#   - https://github.com/sponsors/davidgarcia93
+# maintainers:
+#   - davidgarcia93
 
 environment:
-  sdk: '>=3.4.1 <4.0.0'
+  sdk: ">=3.4.1 <4.0.0"
   flutter: ">=1.17.0"
 
 dependencies:
