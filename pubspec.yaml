@@ -1,15 +1,16 @@
 name: flutter_policy_engine
-description: "A new Flutter package project."
+description: "A lightweight, extensible policy engine for Flutter enabling Attribute-Based Access Control (ABAC) and Role-Based Access Control (RBAC) with declarative rule definitions."
 version: 0.0.1
 homepage:
 
 environment:
-  sdk: '>=3.4.1 <4.0.0'
+  sdk: ">=3.4.1 <4.0.0"
   flutter: ">=1.17.0"
 
 dependencies:
   flutter:
     sdk: flutter
+  meta: ^1.16.0
 
 dev_dependencies:
   flutter_test:
