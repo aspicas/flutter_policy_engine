@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_policy_engine/utils/json_handler.dart';
+import 'package:flutter_policy_engine/src/utils/json_handler.dart';
 
 // Test data classes for JSON conversion testing
 class TestUser {
@@ -110,560 +110,271 @@ class TestPolicy {
 
 void main() {
   group('JsonHandler', () {
-    group('fromJson', () {
-      test('should convert valid JSON string to object', () {
-        const jsonString = '''
-        {
-          "name": "John Doe",
-          "age": 30,
-          "hobbies": ["reading", "swimming"],
-          "metadata": {"city": "New York"}
-        }
-        ''';
-
-        final result = JsonHandler.fromJson<TestUser>(
-          jsonString,
-          (json) => TestUser.fromJson(json),
-        );
-
-        expect(result, isNotNull);
-        expect(result!.name, 'John Doe');
-        expect(result.age, 30);
-        expect(result.hobbies, ['reading', 'swimming']);
-        expect(result.metadata, {'city': 'New York'});
-      });
-
-      test('should return null for invalid JSON format', () {
-        const invalidJson = '{"name": "John", "age": 30,}'; // Trailing comma
-
-        final result = JsonHandler.fromJson<TestUser>(
-          invalidJson,
-          (json) => TestUser.fromJson(json),
-        );
-
-        expect(result, isNull);
-      });
-
-      test('should return null for malformed JSON', () {
-        const malformedJson =
-            '{"name": "John", "age": "invalid"}'; // age should be int
-
-        final result = JsonHandler.fromJson<TestUser>(
-          malformedJson,
-          (json) => TestUser.fromJson(json),
-        );
-
-        expect(result, isNull);
-      });
-
-      test('should return null for empty string', () {
-        const emptyString = '';
-
-        final result = JsonHandler.fromJson<TestUser>(
-          emptyString,
-          (json) => TestUser.fromJson(json),
-        );
-
-        expect(result, isNull);
-      });
-
-      // Note: null string tests removed as JsonHandler doesn't handle null strings
-      // The method signature requires a non-null String parameter
-
-      test('should handle JSON with missing optional fields', () {
-        const jsonString = '{"name": "Jane", "age": 25}';
-
-        final result = JsonHandler.fromJson<TestUser>(
-          jsonString,
-          (json) => TestUser.fromJson(json),
-        );
-
-        expect(result, isNotNull);
-        expect(result!.name, 'Jane');
-        expect(result.age, 25);
-        expect(result.hobbies, isEmpty);
-        expect(result.metadata, isEmpty);
-      });
-    });
-
-    group('fromJsonList', () {
-      test('should convert valid JSON array to list of objects', () {
-        const jsonString = '''
-        [
-          {
-            "name": "John Doe",
-            "age": 30,
-            "hobbies": ["reading"],
-            "metadata": {"city": "NYC"}
+    group('parseMap', () {
+      test('should convert JSON map to strongly-typed map', () {
+        final jsonMap = {
+          'user1': {
+            'name': 'John Doe',
+            'age': 30,
+            'hobbies': ['reading', 'swimming'],
+            'metadata': {'city': 'New York'}
           },
-          {
-            "name": "Jane Smith",
-            "age": 25,
-            "hobbies": ["swimming", "coding"],
-            "metadata": {"city": "LA"}
+          'user2': {
+            'name': 'Jane Smith',
+            'age': 25,
+            'hobbies': ['coding', 'gaming'],
+            'metadata': {'city': 'Los Angeles'}
           }
-        ]
-        ''';
+        };
 
-        final result = JsonHandler.fromJsonList<TestUser>(
-          jsonString,
+        final result = JsonHandler.parseMap<TestUser>(
+          jsonMap,
           (json) => TestUser.fromJson(json),
         );
 
         expect(result, hasLength(2));
-        expect(result[0].name, 'John Doe');
-        expect(result[0].age, 30);
-        expect(result[1].name, 'Jane Smith');
-        expect(result[1].age, 25);
+        expect(result['user1']!.name, 'John Doe');
+        expect(result['user1']!.age, 30);
+        expect(result['user1']!.hobbies, ['reading', 'swimming']);
+        expect(result['user1']!.metadata, {'city': 'New York'});
+        expect(result['user2']!.name, 'Jane Smith');
+        expect(result['user2']!.age, 25);
+        expect(result['user2']!.hobbies, ['coding', 'gaming']);
+        expect(result['user2']!.metadata, {'city': 'Los Angeles'});
       });
 
-      test('should return empty list for invalid JSON format', () {
-        const invalidJson = '[{"name": "John", "age": 30,}]'; // Trailing comma
+      test('should handle empty map', () {
+        final emptyMap = <String, dynamic>{};
 
-        final result = JsonHandler.fromJsonList<TestUser>(
-          invalidJson,
+        final result = JsonHandler.parseMap<TestUser>(
+          emptyMap,
           (json) => TestUser.fromJson(json),
         );
 
         expect(result, isEmpty);
       });
 
-      test('should return empty list for malformed JSON', () {
-        const malformedJson = '[{"name": "John", "age": "invalid"}]';
+      test('should handle map with missing optional fields', () {
+        final jsonMap = {
+          'user1': {
+            'name': 'John Doe',
+            'age': 30,
+          },
+          'user2': {
+            'name': 'Jane Smith',
+            'age': 25,
+          }
+        };
 
-        final result = JsonHandler.fromJsonList<TestUser>(
-          malformedJson,
-          (json) => TestUser.fromJson(json),
-        );
-
-        expect(result, isEmpty);
-      });
-
-      test('should return empty list for empty string', () {
-        const emptyString = '';
-
-        final result = JsonHandler.fromJsonList<TestUser>(
-          emptyString,
-          (json) => TestUser.fromJson(json),
-        );
-
-        expect(result, isEmpty);
-      });
-
-      // Note: null string tests removed as JsonHandler doesn't handle null strings
-      // The method signature requires a non-null String parameter
-
-      test('should handle empty JSON array', () {
-        const emptyArray = '[]';
-
-        final result = JsonHandler.fromJsonList<TestUser>(
-          emptyArray,
-          (json) => TestUser.fromJson(json),
-        );
-
-        expect(result, isEmpty);
-      });
-
-      test('should handle JSON array with missing optional fields', () {
-        const jsonString = '''
-        [
-          {"name": "John", "age": 30},
-          {"name": "Jane", "age": 25}
-        ]
-        ''';
-
-        final result = JsonHandler.fromJsonList<TestUser>(
-          jsonString,
+        final result = JsonHandler.parseMap<TestUser>(
+          jsonMap,
           (json) => TestUser.fromJson(json),
         );
 
         expect(result, hasLength(2));
-        expect(result[0].hobbies, isEmpty);
-        expect(result[0].metadata, isEmpty);
-        expect(result[1].hobbies, isEmpty);
-        expect(result[1].metadata, isEmpty);
+        expect(result['user1']!.hobbies, isEmpty);
+        expect(result['user1']!.metadata, isEmpty);
+        expect(result['user2']!.hobbies, isEmpty);
+        expect(result['user2']!.metadata, isEmpty);
+      });
+
+      test('should handle different object types', () {
+        final jsonMap = {
+          'admin': {
+            'roleName': 'admin',
+            'allowedContent': ['read', 'write', 'delete'],
+            'metadata': {'level': 5, 'active': true}
+          },
+          'user': {
+            'roleName': 'user',
+            'allowedContent': ['read'],
+            'metadata': {'level': 1, 'active': true}
+          }
+        };
+
+        final result = JsonHandler.parseMap<TestPolicy>(
+          jsonMap,
+          (json) => TestPolicy.fromJson(json),
+        );
+
+        expect(result, hasLength(2));
+        expect(result['admin']!.roleName, 'admin');
+        expect(result['admin']!.allowedContent, ['read', 'write', 'delete']);
+        expect(result['admin']!.metadata, {'level': 5, 'active': true});
+        expect(result['user']!.roleName, 'user');
+        expect(result['user']!.allowedContent, ['read']);
+        expect(result['user']!.metadata, {'level': 1, 'active': true});
       });
     });
 
-    group('toJson', () {
-      test('should convert object to valid JSON string', () {
-        const user = TestUser(
-          name: 'John Doe',
-          age: 30,
-          hobbies: ['reading', 'swimming'],
-          metadata: {'city': 'New York'},
-        );
+    group('mapToJson', () {
+      test('should convert typed map to JSON-serializable map', () {
+        final users = {
+          'user1': const TestUser(
+              name: 'John Doe',
+              age: 30,
+              hobbies: ['reading', 'swimming'],
+              metadata: {'city': 'New York'}),
+          'user2': const TestUser(
+              name: 'Jane Smith',
+              age: 25,
+              hobbies: ['coding', 'gaming'],
+              metadata: {'city': 'Los Angeles'})
+        };
 
-        final result = JsonHandler.toJson<TestUser>(
-          user,
+        final result = JsonHandler.mapToJson<TestUser>(
+          users,
           (user) => user.toJson(),
         );
 
-        expect(result, isNotNull);
-        expect(result, contains('"name":"John Doe"'));
-        expect(result, contains('"age":30'));
-        expect(result, contains('"hobbies":["reading","swimming"]'));
-        expect(result, contains('"metadata":{"city":"New York"}'));
+        expect(result, hasLength(2));
+        expect((result['user1'] as Map<String, dynamic>)['name'], 'John Doe');
+        expect((result['user1'] as Map<String, dynamic>)['age'], 30);
+        expect((result['user1'] as Map<String, dynamic>)['hobbies'],
+            ['reading', 'swimming']);
+        expect((result['user1'] as Map<String, dynamic>)['metadata'],
+            {'city': 'New York'});
+        expect((result['user2'] as Map<String, dynamic>)['name'], 'Jane Smith');
+        expect((result['user2'] as Map<String, dynamic>)['age'], 25);
+        expect((result['user2'] as Map<String, dynamic>)['hobbies'],
+            ['coding', 'gaming']);
+        expect((result['user2'] as Map<String, dynamic>)['metadata'],
+            {'city': 'Los Angeles'});
       });
 
-      test('should handle object with empty collections', () {
-        const user = TestUser(
-          name: 'Jane Smith',
-          age: 25,
-          hobbies: [],
-          metadata: {},
-        );
+      test('should handle empty map', () {
+        final emptyMap = <String, TestUser>{};
 
-        final result = JsonHandler.toJson<TestUser>(
-          user,
+        final result = JsonHandler.mapToJson<TestUser>(
+          emptyMap,
           (user) => user.toJson(),
         );
 
-        expect(result, isNotNull);
-        expect(result, contains('"hobbies":[]'));
-        expect(result, contains('"metadata":{}'));
+        expect(result, isEmpty);
       });
 
-      // Note: null object tests removed as JsonHandler doesn't handle null objects
-      // The method signature requires a non-null object parameter
+      test('should handle objects with empty collections', () {
+        final users = {
+          'user1': const TestUser(
+              name: 'John Doe', age: 30, hobbies: [], metadata: {}),
+          'user2': const TestUser(
+              name: 'Jane Smith', age: 25, hobbies: [], metadata: {})
+        };
 
-      test('should handle complex nested objects', () {
-        const policy = TestPolicy(
-          roleName: 'admin',
-          allowedContent: ['read', 'write', 'delete'],
-          metadata: {
-            'permissions': ['user_management', 'system_config'],
-            'level': 5,
-            'active': true,
-          },
+        final result = JsonHandler.mapToJson<TestUser>(
+          users,
+          (user) => user.toJson(),
         );
 
-        final result = JsonHandler.toJson<TestPolicy>(
-          policy,
+        expect(result, hasLength(2));
+        expect((result['user1'] as Map<String, dynamic>)['hobbies'], isEmpty);
+        expect((result['user1'] as Map<String, dynamic>)['metadata'], isEmpty);
+        expect((result['user2'] as Map<String, dynamic>)['hobbies'], isEmpty);
+        expect((result['user2'] as Map<String, dynamic>)['metadata'], isEmpty);
+      });
+
+      test('should handle different object types', () {
+        final policies = {
+          'admin': const TestPolicy(
+              roleName: 'admin',
+              allowedContent: ['read', 'write', 'delete'],
+              metadata: {'level': 5, 'active': true}),
+          'user': const TestPolicy(
+              roleName: 'user',
+              allowedContent: ['read'],
+              metadata: {'level': 1, 'active': true})
+        };
+
+        final result = JsonHandler.mapToJson<TestPolicy>(
+          policies,
           (policy) => policy.toJson(),
         );
 
-        expect(result, isNotNull);
-        expect(result, contains('"roleName":"admin"'));
-        expect(result, contains('"allowedContent":["read","write","delete"]'));
-        expect(result,
-            contains('"permissions":["user_management","system_config"]'));
-        expect(result, contains('"level":5'));
-        expect(result, contains('"active":true'));
-      });
-    });
-
-    group('toJsonList', () {
-      test('should convert list of objects to valid JSON string', () {
-        const users = [
-          TestUser(
-            name: 'John Doe',
-            age: 30,
-            hobbies: ['reading'],
-            metadata: {'city': 'NYC'},
-          ),
-          TestUser(
-            name: 'Jane Smith',
-            age: 25,
-            hobbies: ['swimming', 'coding'],
-            metadata: {'city': 'LA'},
-          ),
-        ];
-
-        final result = JsonHandler.toJsonList<TestUser>(
-          users,
-          (user) => user.toJson(),
-        );
-
-        expect(result, isNotNull);
-        expect(result, startsWith('['));
-        expect(result, endsWith(']'));
-        expect(result, contains('"name":"John Doe"'));
-        expect(result, contains('"name":"Jane Smith"'));
-      });
-
-      test('should handle empty list', () {
-        const users = <TestUser>[];
-
-        final result = JsonHandler.toJsonList<TestUser>(
-          users,
-          (user) => user.toJson(),
-        );
-
-        expect(result, isNotNull);
-        expect(result, '[]');
-      });
-
-      // Note: null list tests removed as JsonHandler doesn't handle null lists
-      // The method signature requires a non-null List parameter
-
-      test('should handle list with objects containing empty collections', () {
-        const users = [
-          TestUser(name: 'John', age: 30, hobbies: [], metadata: {}),
-          TestUser(name: 'Jane', age: 25, hobbies: [], metadata: {}),
-        ];
-
-        final result = JsonHandler.toJsonList<TestUser>(
-          users,
-          (user) => user.toJson(),
-        );
-
-        expect(result, isNotNull);
-        expect(result, contains('"hobbies":[]'));
-        expect(result, contains('"metadata":{}'));
-      });
-    });
-
-    group('parseJson', () {
-      test('should parse valid JSON string to Map', () {
-        const jsonString = '''
-        {
-          "name": "John Doe",
-          "age": 30,
-          "hobbies": ["reading", "swimming"],
-          "metadata": {"city": "New York"}
-        }
-        ''';
-
-        final result = JsonHandler.parseJson(jsonString);
-
-        expect(result, isNotNull);
-        expect(result!['name'], 'John Doe');
-        expect(result['age'], 30);
-        expect(result['hobbies'], ['reading', 'swimming']);
-        expect(result['metadata'], {'city': 'New York'});
-      });
-
-      test('should return null for invalid JSON format', () {
-        const invalidJson = '{"name": "John", "age": 30,}'; // Trailing comma
-
-        final result = JsonHandler.parseJson(invalidJson);
-
-        expect(result, isNull);
-      });
-
-      test('should return null for malformed JSON', () {
-        const malformedJson = '{"name": "John", "age": 30,}'; // Trailing comma
-
-        final result = JsonHandler.parseJson(malformedJson);
-
-        expect(result, isNull);
-      });
-
-      test('should return null for empty string', () {
-        const emptyString = '';
-
-        final result = JsonHandler.parseJson(emptyString);
-
-        expect(result, isNull);
-      });
-
-      // Note: null string tests removed as JsonHandler doesn't handle null strings
-      // The method signature requires a non-null String parameter
-
-      test('should handle JSON with nested objects', () {
-        const jsonString = '''
-        {
-          "user": {
-            "name": "John",
-            "profile": {
-              "age": 30,
-              "preferences": {
-                "theme": "dark",
-                "notifications": true
-              }
-            }
-          }
-        }
-        ''';
-
-        final result = JsonHandler.parseJson(jsonString);
-
-        expect(result, isNotNull);
-        expect(result!['user']['name'], 'John');
-        expect(result['user']['profile']['age'], 30);
-        expect(result['user']['profile']['preferences']['theme'], 'dark');
-        expect(result['user']['profile']['preferences']['notifications'], true);
-      });
-    });
-
-    group('isValidJson', () {
-      test('should return true for valid JSON object', () {
-        const validJson = '{"name": "John", "age": 30}';
-
-        final result = JsonHandler.isValidJson(validJson);
-
-        expect(result, isTrue);
-      });
-
-      test('should return true for valid JSON array', () {
-        const validJson = '[{"name": "John"}, {"name": "Jane"}]';
-
-        final result = JsonHandler.isValidJson(validJson);
-
-        expect(result, isTrue);
-      });
-
-      test('should return true for valid JSON with nested structures', () {
-        const validJson = '''
-        {
-          "users": [
-            {"name": "John", "metadata": {"city": "NYC"}},
-            {"name": "Jane", "metadata": {"city": "LA"}}
-          ]
-        }
-        ''';
-
-        final result = JsonHandler.isValidJson(validJson);
-
-        expect(result, isTrue);
-      });
-
-      test('should return false for invalid JSON format', () {
-        const invalidJson = '{"name": "John", "age": 30,}'; // Trailing comma
-
-        final result = JsonHandler.isValidJson(invalidJson);
-
-        expect(result, isFalse);
-      });
-
-      test('should return false for malformed JSON', () {
-        const malformedJson = '{"name": "John", "age": 30,}'; // Trailing comma
-
-        final result = JsonHandler.isValidJson(malformedJson);
-
-        expect(result, isFalse);
-      });
-
-      test('should return false for empty string', () {
-        const emptyString = '';
-
-        final result = JsonHandler.isValidJson(emptyString);
-
-        expect(result, isFalse);
-      });
-
-      // Note: null string tests removed as JsonHandler doesn't handle null strings
-      // The method signature requires a non-null String parameter
-
-      test('should return false for plain text', () {
-        const plainText = 'This is not JSON';
-
-        final result = JsonHandler.isValidJson(plainText);
-
-        expect(result, isFalse);
-      });
-
-      test('should return false for incomplete JSON', () {
-        const incompleteJson = '{"name": "John"';
-
-        final result = JsonHandler.isValidJson(incompleteJson);
-
-        expect(result, isFalse);
+        expect(result, hasLength(2));
+        expect((result['admin'] as Map<String, dynamic>)['roleName'], 'admin');
+        expect((result['admin'] as Map<String, dynamic>)['allowedContent'],
+            ['read', 'write', 'delete']);
+        expect((result['admin'] as Map<String, dynamic>)['metadata'],
+            {'level': 5, 'active': true});
+        expect((result['user'] as Map<String, dynamic>)['roleName'], 'user');
+        expect((result['user'] as Map<String, dynamic>)['allowedContent'],
+            ['read']);
+        expect((result['user'] as Map<String, dynamic>)['metadata'],
+            {'level': 1, 'active': true});
       });
     });
 
     group('Integration tests', () {
-      test('should handle round-trip conversion for single object', () {
-        const originalUser = TestUser(
-          name: 'John Doe',
-          age: 30,
-          hobbies: ['reading', 'swimming'],
-          metadata: {'city': 'New York', 'country': 'USA'},
-        );
+      test('should handle round-trip conversion for map of objects', () {
+        final originalUsers = {
+          'user1': const TestUser(
+              name: 'John Doe',
+              age: 30,
+              hobbies: ['reading', 'swimming'],
+              metadata: {'city': 'New York', 'country': 'USA'}),
+          'user2': const TestUser(
+              name: 'Jane Smith',
+              age: 25,
+              hobbies: ['coding', 'gaming'],
+              metadata: {'city': 'Los Angeles', 'country': 'USA'})
+        };
 
-        // Convert to JSON
-        final jsonString = JsonHandler.toJson<TestUser>(
-          originalUser,
-          (user) => user.toJson(),
-        );
-
-        expect(jsonString, isNotNull);
-
-        // Convert back from JSON
-        final convertedUser = JsonHandler.fromJson<TestUser>(
-          jsonString!,
-          (json) => TestUser.fromJson(json),
-        );
-
-        expect(convertedUser, isNotNull);
-        expect(convertedUser, equals(originalUser));
-      });
-
-      test('should handle round-trip conversion for list of objects', () {
-        const originalUsers = [
-          TestUser(
-            name: 'John Doe',
-            age: 30,
-            hobbies: ['reading'],
-            metadata: {'city': 'NYC'},
-          ),
-          TestUser(
-            name: 'Jane Smith',
-            age: 25,
-            hobbies: ['swimming', 'coding'],
-            metadata: {'city': 'LA'},
-          ),
-        ];
-
-        // Convert to JSON
-        final jsonString = JsonHandler.toJsonList<TestUser>(
+        // Convert to JSON map
+        final jsonMap = JsonHandler.mapToJson<TestUser>(
           originalUsers,
           (user) => user.toJson(),
         );
 
-        expect(jsonString, isNotNull);
+        expect(jsonMap, hasLength(2));
 
-        // Convert back from JSON
-        final convertedUsers = JsonHandler.fromJsonList<TestUser>(
-          jsonString!,
+        // Convert back from JSON map
+        final convertedUsers = JsonHandler.parseMap<TestUser>(
+          jsonMap,
           (json) => TestUser.fromJson(json),
         );
 
         expect(convertedUsers, hasLength(2));
-        expect(convertedUsers[0], equals(originalUsers[0]));
-        expect(convertedUsers[1], equals(originalUsers[1]));
+        expect(convertedUsers['user1'], equals(originalUsers['user1']));
+        expect(convertedUsers['user2'], equals(originalUsers['user2']));
       });
 
-      test('should handle complex nested structures', () {
-        const originalPolicies = [
-          TestPolicy(
-            roleName: 'admin',
-            allowedContent: ['read', 'write', 'delete'],
-            metadata: {
-              'permissions': ['user_management'],
-              'level': 5,
-              'active': true,
-            },
-          ),
-          TestPolicy(
-            roleName: 'user',
-            allowedContent: ['read'],
-            metadata: {
-              'permissions': ['basic_access'],
-              'level': 1,
-              'active': true,
-            },
-          ),
-        ];
+      test('should handle round-trip conversion for policy map', () {
+        final originalPolicies = {
+          'admin': const TestPolicy(roleName: 'admin', allowedContent: [
+            'read',
+            'write',
+            'delete'
+          ], metadata: {
+            'permissions': ['user_management'],
+            'level': 5,
+            'active': true,
+          }),
+          'user': const TestPolicy(roleName: 'user', allowedContent: [
+            'read'
+          ], metadata: {
+            'permissions': ['basic_access'],
+            'level': 1,
+            'active': true,
+          })
+        };
 
-        // Convert to JSON
-        final jsonString = JsonHandler.toJsonList<TestPolicy>(
+        // Convert to JSON map
+        final jsonMap = JsonHandler.mapToJson<TestPolicy>(
           originalPolicies,
           (policy) => policy.toJson(),
         );
 
-        expect(jsonString, isNotNull);
+        expect(jsonMap, hasLength(2));
 
-        // Convert back from JSON
-        final convertedPolicies = JsonHandler.fromJsonList<TestPolicy>(
-          jsonString!,
+        // Convert back from JSON map
+        final convertedPolicies = JsonHandler.parseMap<TestPolicy>(
+          jsonMap,
           (json) => TestPolicy.fromJson(json),
         );
 
         expect(convertedPolicies, hasLength(2));
-        expect(convertedPolicies[0], equals(originalPolicies[0]));
-        expect(convertedPolicies[1], equals(originalPolicies[1]));
+        expect(convertedPolicies['admin'], equals(originalPolicies['admin']));
+        expect(convertedPolicies['user'], equals(originalPolicies['user']));
       });
     });
   });

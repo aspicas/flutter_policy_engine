@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_policy_engine/utils/log_handler.dart';
+import 'package:flutter_policy_engine/src/utils/log_handler.dart';
 
 void main() {
   group('LogHandler', () {
