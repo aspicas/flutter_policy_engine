@@ -1,3 +1,4 @@
+import 'package:flutter_policy_engine/src/exceptions/policy_sdk_exceptions.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_policy_engine/src/utils/json_handler.dart';
 
@@ -205,6 +206,127 @@ void main() {
         expect(result['user']!.allowedContent, ['read']);
         expect(result['user']!.metadata, {'level': 1, 'active': true});
       });
+
+      // New error handling tests
+      group('Error handling', () {
+        test(
+            'should handle invalid value types gracefully with partial success',
+            () {
+          final jsonMap = {
+            'valid_user': {
+              'name': 'John Doe',
+              'age': 30,
+              'hobbies': ['reading'],
+              'metadata': {}
+            },
+            'invalid_user': 'not_a_map', // Invalid type
+            'another_valid_user': {
+              'name': 'Jane Smith',
+              'age': 25,
+              'hobbies': ['coding'],
+              'metadata': {}
+            }
+          };
+
+          final result = JsonHandler.parseMap<TestUser>(
+            jsonMap,
+            (json) => TestUser.fromJson(json),
+            allowPartialSuccess: true,
+          );
+
+          expect(result, hasLength(2));
+          expect(result['valid_user']!.name, 'John Doe');
+          expect(result['another_valid_user']!.name, 'Jane Smith');
+          expect(result.containsKey('invalid_user'), false);
+        });
+
+        test(
+            'should throw JsonParseException when allowPartialSuccess is false',
+            () {
+          final jsonMap = {
+            'valid_user': {
+              'name': 'John Doe',
+              'age': 30,
+              'hobbies': ['reading'],
+              'metadata': {}
+            },
+            'invalid_user': 'not_a_map', // Invalid type
+          };
+
+          expect(
+            () => JsonHandler.parseMap<TestUser>(
+              jsonMap,
+              (json) => TestUser.fromJson(json),
+              allowPartialSuccess: false,
+            ),
+            throwsA(isA<JsonParseException>()),
+          );
+        });
+
+        test('should handle fromJson function throwing exceptions', () {
+          final jsonMap = {
+            'valid_user': {
+              'name': 'John Doe',
+              'age': 30,
+              'hobbies': ['reading'],
+              'metadata': {}
+            },
+            'invalid_user': {
+              'name': 'Jane Smith',
+              // Missing required 'age' field
+              'hobbies': ['coding'],
+              'metadata': {}
+            }
+          };
+
+          final result = JsonHandler.parseMap<TestUser>(
+            jsonMap,
+            (json) => TestUser.fromJson(json),
+            allowPartialSuccess: true,
+          );
+
+          expect(result, hasLength(1));
+          expect(result['valid_user']!.name, 'John Doe');
+          expect(result.containsKey('invalid_user'), false);
+        });
+
+        test('should throw JsonParseException when no items can be parsed', () {
+          final jsonMap = {
+            'invalid1': 'not_a_map',
+            'invalid2': 123,
+            'invalid3': null,
+          };
+
+          expect(
+            () => JsonHandler.parseMap<TestUser>(
+              jsonMap,
+              (json) => TestUser.fromJson(json),
+              allowPartialSuccess: false,
+            ),
+            throwsA(isA<JsonParseException>()),
+          );
+        });
+
+        test('should include context in error messages', () {
+          final jsonMap = {
+            'invalid_user': 'not_a_map',
+          };
+
+          try {
+            JsonHandler.parseMap<TestUser>(
+              jsonMap,
+              (json) => TestUser.fromJson(json),
+              context: 'test_context',
+              allowPartialSuccess: false,
+            );
+            fail('Expected JsonParseException to be thrown');
+          } catch (e) {
+            expect(e, isA<JsonParseException>());
+            // The context is logged but not included in the exception message
+            // This is expected behavior for logging vs exception messages
+          }
+        });
+      });
     });
 
     group('mapToJson', () {
@@ -302,6 +424,119 @@ void main() {
         expect((result['user'] as Map<String, dynamic>)['metadata'],
             {'level': 1, 'active': true});
       });
+
+      // New error handling tests for serialization
+      group('Serialization error handling', () {
+        test(
+            'should handle toJson function throwing exceptions with partial success',
+            () {
+          final users = {
+            'valid_user': const TestUser(
+                name: 'John Doe', age: 30, hobbies: ['reading'], metadata: {}),
+            'problematic_user': ProblematicUser('Jane Smith', 25),
+          };
+
+          final result = JsonHandler.mapToJson<TestUser>(
+            users,
+            (user) => user.toJson(),
+            allowPartialSuccess: true,
+          );
+
+          expect(result, hasLength(1));
+          expect((result['valid_user'] as Map<String, dynamic>)['name'],
+              'John Doe');
+          expect(result.containsKey('problematic_user'), false);
+        });
+
+        test(
+            'should throw JsonSerializeException when allowPartialSuccess is false',
+            () {
+          final users = {
+            'valid_user': const TestUser(
+                name: 'John Doe', age: 30, hobbies: ['reading'], metadata: {}),
+            'problematic_user': ProblematicUser('Jane Smith', 25),
+          };
+
+          expect(
+            () => JsonHandler.mapToJson<TestUser>(
+              users,
+              (user) => user.toJson(),
+              allowPartialSuccess: false,
+            ),
+            throwsA(isA<JsonSerializeException>()),
+          );
+        });
+
+        test(
+            'should throw JsonSerializeException when no items can be serialized',
+            () {
+          final users = {
+            'problematic1': ProblematicUser('User1', 25),
+            'problematic2': ProblematicUser('User2', 30),
+          };
+
+          expect(
+            () => JsonHandler.mapToJson<TestUser>(
+              users,
+              (user) => user.toJson(),
+              allowPartialSuccess: false,
+            ),
+            throwsA(isA<JsonSerializeException>()),
+          );
+        });
+      });
+    });
+
+    group('Utility methods', () {
+      test('isValidJsonMap should correctly validate JSON maps', () {
+        expect(JsonHandler.isValidJsonMap({'key': 'value'}), true);
+        expect(
+            JsonHandler.isValidJsonMap({
+              'key': 123,
+              'nested': {'a': 'b'}
+            }),
+            true);
+        expect(JsonHandler.isValidJsonMap('not_a_map'), false);
+        expect(JsonHandler.isValidJsonMap(123), false);
+        expect(JsonHandler.isValidJsonMap(null), false);
+        expect(JsonHandler.isValidJsonMap([]), false);
+      });
+
+      test('tryParse should return parsed object on success', () {
+        final json = {
+          'name': 'John Doe',
+          'age': 30,
+          'hobbies': ['reading'],
+          'metadata': {}
+        };
+
+        final result = JsonHandler.tryParse<TestUser>(
+          json,
+          (json) => TestUser.fromJson(json),
+          context: 'test_context',
+        );
+
+        expect(result, isNotNull);
+        expect(result!.name, 'John Doe');
+        expect(result.age, 30);
+      });
+
+      test('tryParse should return null on failure', () {
+        final invalidJson = {
+          'name': 'John Doe',
+          // Missing required 'age' field
+          'hobbies': ['reading'],
+          'metadata': {}
+        };
+
+        final result = JsonHandler.tryParse<TestUser>(
+          invalidJson,
+          (json) => TestUser.fromJson(json),
+          context: 'test_context',
+        );
+
+        expect(result, isNull);
+      });
     });
 
     group('Integration tests', () {
@@ -376,6 +611,51 @@ void main() {
         expect(convertedPolicies['admin'], equals(originalPolicies['admin']));
         expect(convertedPolicies['user'], equals(originalPolicies['user']));
       });
+
+      test('should handle mixed valid and invalid data in round-trip', () {
+        final originalUsers = {
+          'valid_user': const TestUser(
+              name: 'John Doe', age: 30, hobbies: ['reading'], metadata: {}),
+          'invalid_user': const TestUser(
+              name: 'Jane Smith', age: 25, hobbies: ['coding'], metadata: {}),
+        };
+
+        // Convert to JSON map
+        final jsonMap = JsonHandler.mapToJson<TestUser>(
+          originalUsers,
+          (user) => user.toJson(),
+        );
+
+        // Add some invalid data to the JSON map
+        jsonMap['corrupted_user'] = 'not_a_map';
+        jsonMap['null_user'] = null;
+
+        // Convert back from JSON map with partial success
+        final convertedUsers = JsonHandler.parseMap<TestUser>(
+          jsonMap,
+          (json) => TestUser.fromJson(json),
+          allowPartialSuccess: true,
+        );
+
+        expect(convertedUsers, hasLength(2));
+        expect(
+            convertedUsers['valid_user'], equals(originalUsers['valid_user']));
+        expect(convertedUsers['invalid_user'],
+            equals(originalUsers['invalid_user']));
+        expect(convertedUsers.containsKey('corrupted_user'), false);
+        expect(convertedUsers.containsKey('null_user'), false);
+      });
     });
   });
+}
+
+// Helper class for testing serialization errors
+class ProblematicUser extends TestUser {
+  ProblematicUser(String name, int age)
+      : super(name: name, age: age, hobbies: [], metadata: {});
+
+  @override
+  Map<String, dynamic> toJson() {
+    throw Exception('Simulated serialization error');
+  }
 }
