@@ -1,4 +1,7 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_policy_engine/flutter_policy_engine.dart';
 
 void main() {
   runApp(const MyApp());
@@ -9,61 +12,77 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Policy Engine Demo',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const PolicyEngineDemo(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+class PolicyEngineDemo extends StatefulWidget {
+  const PolicyEngineDemo({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<StatefulWidget> createState() {
+    return _PolicyEngineDemoState();
+  }
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _PolicyEngineDemoState extends State<PolicyEngineDemo> {
+  late PolicyManager policyManager;
+  bool _isInitialized = false;
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _initializePolicyManager();
+  }
+
+  Future<void> _initializePolicyManager() async {
+    policyManager = PolicyManager();
+    final policies = {
+      "admin": ["LoginPage", "Dashboard", "UserManagement", "Settings"],
+      "user": ["LoginPage", "Dashboard"],
+      "guest": ["LoginPage"]
+    };
+    try {
+      await policyManager.initialize(policies);
+      setState(() {
+        _isInitialized = true;
+      });
+    } catch (e) {
+      log(e.toString());
+      setState(() {
+        _isInitialized = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          //
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+    if (!_isInitialized) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Policy Engine Demo'),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Loading policies...'),
+            ],
+          ),
+        ),
+      );
+    }
+    return const Center(
+      child: Text('Policies loaded'),
     );
   }
 }
