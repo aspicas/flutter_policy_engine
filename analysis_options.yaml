@@ -2,3 +2,25 @@ include: package:flutter_lints/flutter.yaml
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
+
+linter:
+  rules:
+    # Documentation
+    public_member_api_docs: true
+
+    # Performance
+    avoid_print: true
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+
+    # Style
+    prefer_final_locals: true
+    prefer_single_quotes: true
+
+    # Safety
+    avoid_dynamic_calls: true
+    avoid_type_to_string: true
+
+    # Library specific
+    library_private_types_in_public_api: true
+    missing_whitespace_between_adjacent_strings: true
