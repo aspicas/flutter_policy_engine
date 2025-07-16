@@ -79,22 +79,68 @@ class PolicyManager extends ChangeNotifier {
         operation: 'policy_manager_initialize',
       );
 
-      final policyMap = jsonPolicies.map(
-        (key, value) => MapEntry(
-          key,
-          Policy(
+      // Create a map of valid policies, skipping invalid ones
+      final validPolicies = <String, Map<String, dynamic>>{};
+
+      for (final entry in jsonPolicies.entries) {
+        final key = entry.key;
+        final value = entry.value;
+
+        try {
+          if (value == null) {
+            LogHandler.warning(
+              'Skipping null policy value',
+              context: {'role': key},
+              operation: 'policy_validation_skip',
+            );
+            continue;
+          }
+
+          if (value is! List) {
+            LogHandler.warning(
+              'Skipping invalid policy value type',
+              context: {
+                'role': key,
+                'expected_type': 'List',
+                'actual_type': value.runtimeType.toString(),
+              },
+              operation: 'policy_validation_skip',
+            );
+            continue;
+          }
+
+          if (value.any((item) => item is! String)) {
+            LogHandler.warning(
+              'Skipping policy with non-string content items',
+              context: {'role': key},
+              operation: 'policy_validation_skip',
+            );
+            continue;
+          }
+
+          // Create the policy and add to valid policies
+          final policy = Policy(
             roleName: key,
-            allowedContent: value as List<String>,
-          ).toJson(),
-        ),
-      );
+            allowedContent: value.cast<String>(),
+          );
+          validPolicies[key] = policy.toJson();
+        } catch (e, stackTrace) {
+          LogHandler.error(
+            'Failed to process policy',
+            error: e,
+            stackTrace: stackTrace,
+            context: {'role': key},
+            operation: 'policy_processing_error',
+          );
+          // Continue with other policies
+        }
+      }
 
       _policies = JsonHandler.parseMap(
-        policyMap,
+        validPolicies,
         (json) => Policy.fromJson(json),
         context: 'policy_manager',
-        allowPartialSuccess:
-            true, // Allow partial success for graceful degradation
+        allowPartialSuccess: true,
       );
 
       // Only create evaluator if we have at least some policies

@@ -1,4 +1,5 @@
-import 'package:meta/meta.dart';
+import 'package:flutter/foundation.dart';
+import 'package:collection/collection.dart';
 
 /// Represents a policy that defines content access permissions for a specific role.
 ///
@@ -91,19 +92,29 @@ class Policy {
   /// the same [allowedContent] (regardless of order). The [metadata] is not
   /// considered in the equality comparison.
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Policy &&
-          roleName == other.roleName &&
-          allowedContent.length == other.allowedContent.length &&
-          allowedContent
-              .every((content) => other.allowedContent.contains(content));
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! Policy) return false;
+
+    if (roleName != other.roleName) return false;
+    if (allowedContent.length != other.allowedContent.length) return false;
+
+    // Sort both lists to ensure order-independent comparison (same as hashCode)
+    final sortedThis = List<String>.from(allowedContent)..sort();
+    final sortedOther = List<String>.from(other.allowedContent)..sort();
+
+    return listEquals(sortedThis, sortedOther);
+  }
 
   /// Returns the hash code for this policy.
   ///
   /// The hash code is based on the [roleName] and [allowedContent] fields.
+  /// The allowedContent is sorted to ensure consistent hash codes regardless of order.
   @override
-  int get hashCode => roleName.hashCode ^ allowedContent.hashCode;
+  int get hashCode {
+    final sortedContent = List<String>.from(allowedContent)..sort();
+    return Object.hash(roleName, const ListEquality().hash(sortedContent));
+  }
 
   /// Returns a string representation of this policy.
   ///
@@ -130,11 +141,28 @@ class Policy {
   /// };
   /// final policy = Policy.fromJson(json);
   /// ```
-  factory Policy.fromJson(Map<String, dynamic> json) => Policy(
-        roleName: json['roleName'] as String,
-        allowedContent: json['allowedContent'] as List<String>,
-        metadata: json['metadata'] as Map<String, dynamic>,
-      );
+  factory Policy.fromJson(Map<String, dynamic> json) {
+    final roleName = json['roleName'];
+    final allowedContent = json['allowedContent'];
+    final metadata = json['metadata'];
+
+    if (roleName == null || roleName is! String) {
+      throw ArgumentError('roleName must be a non-null string');
+    }
+    if (allowedContent == null || allowedContent is! List) {
+      throw ArgumentError('allowedContent must be a non-null list');
+    }
+    if (allowedContent.any((item) => item is! String)) {
+      throw ArgumentError('All allowedContent items must be strings');
+    }
+
+    return Policy(
+      roleName: roleName,
+      allowedContent: allowedContent.cast<String>(),
+      metadata:
+          metadata is Map<String, dynamic> ? metadata : <String, dynamic>{},
+    );
+  }
 
   /// Converts this policy to a JSON map.
   ///

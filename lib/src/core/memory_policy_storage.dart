@@ -11,6 +11,7 @@ import 'package:flutter_policy_engine/src/core/interfaces/i_policy_storage.dart'
 ///
 /// **Note:** All data stored in this implementation will be lost when the
 /// application is terminated or the object is garbage collected.
+// ignore: must_be_immutable
 class MemoryPolicyStorage implements IPolicyStorage {
   /// Internal storage for policies using a Map with String keys and dynamic values.
   ///
@@ -34,7 +35,7 @@ class MemoryPolicyStorage implements IPolicyStorage {
   /// ```
   @override
   Future<Map<String, dynamic>> loadPolicies() async {
-    return Map.from(_policies);
+    return _deepCopy(_policies);
   }
 
   /// Saves the provided policies to memory storage.
@@ -54,7 +55,7 @@ class MemoryPolicyStorage implements IPolicyStorage {
   /// ```
   @override
   Future<void> savePolicies(Map<String, dynamic> policies) async {
-    _policies = Map.from(policies);
+    _policies = _deepCopy(policies);
   }
 
   /// Removes all stored policies from memory.
@@ -71,5 +72,25 @@ class MemoryPolicyStorage implements IPolicyStorage {
   @override
   Future<void> clearPolicies() async {
     _policies.clear();
+  }
+
+  /// Creates a deep copy of the policies map.
+  Map<String, dynamic> _deepCopy(Map<String, dynamic> source) {
+    final result = <String, dynamic>{};
+    for (final entry in source.entries) {
+      result[entry.key] = _deepCopyValue(entry.value);
+    }
+    return result;
+  }
+
+  /// Creates a deep copy of a single value.
+  dynamic _deepCopyValue(dynamic value) {
+    if (value is Map) {
+      return _deepCopy(Map<String, dynamic>.from(value));
+    } else if (value is List) {
+      return value.map((item) => _deepCopyValue(item)).toList();
+    } else {
+      return value;
+    }
   }
 }
