@@ -79,8 +79,18 @@ class PolicyManager extends ChangeNotifier {
         operation: 'policy_manager_initialize',
       );
 
+      final policyMap = jsonPolicies.map(
+        (key, value) => MapEntry(
+          key,
+          Policy(
+            roleName: key,
+            allowedContent: value as List<String>,
+          ).toJson(),
+        ),
+      );
+
       _policies = JsonHandler.parseMap(
-        jsonPolicies,
+        policyMap,
         (json) => Policy.fromJson(json),
         context: 'policy_manager',
         allowPartialSuccess:
