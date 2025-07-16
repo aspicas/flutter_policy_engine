@@ -6,6 +6,7 @@ import 'package:flutter_policy_engine/src/core/interfaces/i_policy_storage.dart'
 import 'package:flutter_policy_engine/src/models/policy.dart';
 
 /// Mock implementation of IPolicyStorage for testing
+// ignore: must_be_immutable
 class MockPolicyStorage implements IPolicyStorage {
   Map<String, dynamic> _policies = {};
   bool _shouldThrowError = false;
@@ -42,6 +43,7 @@ class MockPolicyStorage implements IPolicyStorage {
 }
 
 /// Mock implementation of IPolicyEvaluator for testing
+// ignore: must_be_immutable
 class MockPolicyEvaluator implements IPolicyEvaluator {
   final Map<String, bool> _evaluationResults = {};
   bool _shouldThrowError = false;

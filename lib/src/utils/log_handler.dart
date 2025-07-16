@@ -123,8 +123,11 @@ class LogHandler {
   static bool _isDebugMode = kDebugMode;
   static String _tag = _defaultTag;
   static String _currentScreen = '';
+  // ignore: unused_field
   static bool _includeTimestamp = true;
+  // ignore: unused_field
   static bool _includeStackTrace = true;
+  // ignore: unused_field
   static bool _includeSystemInfo = false;
   static LogLevel _minLogLevel = LogLevel.debug;
   static bool _useStructuredLogging = true;

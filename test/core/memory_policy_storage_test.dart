@@ -53,13 +53,15 @@ void main() {
         final loadedPolicies = await storage.loadPolicies();
 
         // Modify the loaded policies
-        (loadedPolicies['admin']!['permissions'] as List<dynamic>)
-            .add('delete');
+        final adminPolicy = loadedPolicies['admin']! as Map<String, dynamic>;
+        final permissions = adminPolicy['permissions'] as List<dynamic>;
+        permissions.add('delete');
 
         // Reload to verify original wasn't modified
         final reloadedPolicies = await storage.loadPolicies();
-        expect(reloadedPolicies['admin']!['permissions'],
-            equals(['read', 'write']));
+        final reloadedAdminPolicy =
+            reloadedPolicies['admin']! as Map<String, dynamic>;
+        expect(reloadedAdminPolicy['permissions'], equals(['read', 'write']));
       });
 
       test('should handle complex nested structures', () async {
@@ -82,8 +84,10 @@ void main() {
         final loadedPolicies = await storage.loadPolicies();
 
         expect(loadedPolicies, equals(testPolicies));
-        expect(loadedPolicies['admin']!['metadata']!['nested']!['array'],
-            equals([1, 2, 3]));
+        final adminPolicy = loadedPolicies['admin']! as Map<String, dynamic>;
+        final metadata = adminPolicy['metadata'] as Map<String, dynamic>;
+        final nested = metadata['nested'] as Map<String, dynamic>;
+        expect(nested['array'], equals([1, 2, 3]));
       });
     });
 
@@ -140,14 +144,15 @@ void main() {
         await storage.savePolicies(testPolicies);
 
         // Modify the original policies
-        final permissions =
-            testPolicies['admin']!['permissions'] as List<dynamic>;
+        final adminPolicy = testPolicies['admin']! as Map<String, dynamic>;
+        final permissions = adminPolicy['permissions'] as List<dynamic>;
         permissions.add('delete');
 
         // Reload to verify stored policies weren't modified
         final loadedPolicies = await storage.loadPolicies();
-        expect(
-            loadedPolicies['admin']!['permissions'], equals(['read', 'write']));
+        final loadedAdminPolicy =
+            loadedPolicies['admin']! as Map<String, dynamic>;
+        expect(loadedAdminPolicy['permissions'], equals(['read', 'write']));
       });
 
       test('should handle empty policies map', () async {
@@ -190,7 +195,8 @@ void main() {
         final loadedPolicies = await storage.loadPolicies();
 
         expect(loadedPolicies.length, equals(1000));
-        expect(loadedPolicies['policy_500']!['id'], equals(500));
+        final policy500 = loadedPolicies['policy_500']! as Map<String, dynamic>;
+        expect(policy500['id'], equals(500));
       });
     });
 
@@ -376,14 +382,14 @@ void main() {
         await storage.savePolicies(testPolicies);
         final loadedPolicies = await storage.loadPolicies();
 
-        expect(
-            loadedPolicies['admin']!['level1']!['level2']!['level3']![
-                'level4']!['level5']!['value'],
-            equals('deep_value'));
-        expect(
-            loadedPolicies['admin']!['level1']!['level2']!['level3']![
-                'level4']!['level5']!['array'],
-            equals([1, 2, 3, 4, 5]));
+        final adminPolicy = loadedPolicies['admin']! as Map<String, dynamic>;
+        final level1 = adminPolicy['level1'] as Map<String, dynamic>;
+        final level2 = level1['level2'] as Map<String, dynamic>;
+        final level3 = level2['level3'] as Map<String, dynamic>;
+        final level4 = level3['level4'] as Map<String, dynamic>;
+        final level5 = level4['level5'] as Map<String, dynamic>;
+        expect(level5['value'], equals('deep_value'));
+        expect(level5['array'], equals([1, 2, 3, 4, 5]));
       });
 
       test('should handle policies with various data types', () async {
@@ -402,13 +408,14 @@ void main() {
         await storage.savePolicies(testPolicies);
         final loadedPolicies = await storage.loadPolicies();
 
-        expect(loadedPolicies['admin']!['string'], equals('value'));
-        expect(loadedPolicies['admin']!['int'], equals(42));
-        expect(loadedPolicies['admin']!['double'], equals(3.14));
-        expect(loadedPolicies['admin']!['bool'], equals(true));
-        expect(loadedPolicies['admin']!['list'], equals([1, 2, 3]));
-        expect(loadedPolicies['admin']!['map'], equals({'key': 'value'}));
-        expect(loadedPolicies['admin']!['null'], isNull);
+        final adminPolicy = loadedPolicies['admin']! as Map<String, dynamic>;
+        expect(adminPolicy['string'], equals('value'));
+        expect(adminPolicy['int'], equals(42));
+        expect(adminPolicy['double'], equals(3.14));
+        expect(adminPolicy['bool'], equals(true));
+        expect(adminPolicy['list'], equals([1, 2, 3]));
+        expect(adminPolicy['map'], equals({'key': 'value'}));
+        expect(adminPolicy['null'], isNull);
       });
     });
 
@@ -427,7 +434,8 @@ void main() {
         final loadedPolicies = await storage.loadPolicies();
         expect(
             loadedPolicies.length, equals(1)); // Only last save should remain
-        expect(loadedPolicies['policy_99']!['id'], equals(99));
+        final policy99 = loadedPolicies['policy_99']! as Map<String, dynamic>;
+        expect(policy99['id'], equals(99));
       });
 
       test('should handle rapid load operations', () async {
