@@ -93,9 +93,9 @@ class TestPolicy {
           metadata.entries.every((entry) {
             final otherValue = other.metadata[entry.key];
             if (entry.value is List && otherValue is List) {
-              return entry.value.length == otherValue.length &&
-                  (entry.value as List)
-                      .every((item) => otherValue.contains(item));
+              final valueList = entry.value as List;
+              return valueList.length == otherValue.length &&
+                  valueList.every((item) => otherValue.contains(item));
             }
             return entry.value == otherValue;
           });

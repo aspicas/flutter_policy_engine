@@ -432,7 +432,10 @@ void main() {
         final policy = Policy.fromJson(json);
 
         expect(policy.metadata, equals(complexMetadata));
-        expect(policy.metadata['nested']!['array'], equals([1, 2, 3]));
+        expect(
+          (policy.metadata['nested'] as Map<String, dynamic>)['array'],
+          equals([1, 2, 3]),
+        );
       });
     });
 
