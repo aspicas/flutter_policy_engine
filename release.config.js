@@ -27,8 +27,7 @@ module.exports = {
       "@semantic-release/git", // Commits CHANGELOG and bumps version if needed
       {
         assets: ["CHANGELOG.md", "pubspec.yaml"],
-        message:
-          "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",
+        message: "chore(release): ${nextRelease.version} [skip ci]",
       },
     ],
     "@semantic-release/github", // Publishes to GitHub Releases
