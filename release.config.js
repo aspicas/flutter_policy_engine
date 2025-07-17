@@ -46,12 +46,7 @@ module.exports = {
         },
       },
     ],
-    [
-      "@semantic-release/changelog", // Updates CHANGELOG.md
-      {
-        preset: "conventionalcommits",
-      },
-    ],
+    "@semantic-release/changelog", // Updates CHANGELOG.md
     [
       {
         // Hook to update pubspec.yaml
@@ -73,7 +68,7 @@ module.exports = {
       "@semantic-release/git", // Commits CHANGELOG and bumps version if needed
       {
         assets: ["CHANGELOG.md", "pubspec.yaml"],
-        message: "chore(release): ${nextRelease.version}",
+        message: "chore(release): ${nextRelease.version} [skip ci]",
       },
     ],
     "@semantic-release/github", // Publishes to GitHub Releases
