@@ -185,4 +185,24 @@ class PolicyManager extends ChangeNotifier {
       rethrow;
     }
   }
+
+  /// Checks if the specified [role] has access to the given [content].
+  ///
+  /// Returns `true` if the policy manager is initialized and the evaluator
+  /// determines that the [role] is permitted to access the [content].
+  /// Returns `false` if the policy manager is not initialized, the evaluator
+  /// is not set, or if access is denied.
+  ///
+  /// Logs an error if called before initialization or if the evaluator is missing.
+  bool hasAccess(String role, String content) {
+    if (!_isInitialized || _evaluator == null) {
+      LogHandler.error(
+        'Policy manager not initialized or evaluator not set',
+        context: {'role': role, 'content': content},
+        operation: 'policy_manager_access_check',
+      );
+      return false;
+    }
+    return _evaluator!.evaluate(role, content);
+  }
 }
