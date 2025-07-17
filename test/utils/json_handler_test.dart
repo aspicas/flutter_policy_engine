@@ -646,6 +646,71 @@ void main() {
         expect(convertedUsers.containsKey('corrupted_user'), false);
         expect(convertedUsers.containsKey('null_user'), false);
       });
+
+      test(
+          'should handle complete parsing failure with allowPartialSuccess false',
+          () {
+        final invalidJsonMap = {
+          'user1': 'not_a_map',
+          'user2': null,
+          'user3': 123,
+        };
+
+        expect(
+          () => JsonHandler.parseMap<TestUser>(
+            invalidJsonMap,
+            (json) => TestUser.fromJson(json),
+            allowPartialSuccess: false,
+          ),
+          throwsA(isA<JsonParseException>()),
+        );
+      });
+
+      test(
+          'should handle complete serialization failure with allowPartialSuccess false',
+          () {
+        final problematicUsers = {
+          'user1': ProblematicUser('User1', 25),
+          'user2': ProblematicUser('User2', 30),
+        };
+
+        expect(
+          () => JsonHandler.mapToJson<TestUser>(
+            problematicUsers,
+            (user) => user.toJson(),
+            allowPartialSuccess: false,
+          ),
+          throwsA(isA<JsonSerializeException>()),
+        );
+      });
+
+      test('should handle empty map with allowPartialSuccess false', () {
+        final emptyMap = <String, dynamic>{};
+
+        expect(
+          () => JsonHandler.parseMap<TestUser>(
+            emptyMap,
+            (json) => TestUser.fromJson(json),
+            allowPartialSuccess: false,
+          ),
+          throwsA(isA<JsonParseException>()),
+        );
+      });
+
+      test(
+          'should handle empty map serialization with allowPartialSuccess false',
+          () {
+        final emptyMap = <String, TestUser>{};
+
+        expect(
+          () => JsonHandler.mapToJson<TestUser>(
+            emptyMap,
+            (user) => user.toJson(),
+            allowPartialSuccess: false,
+          ),
+          throwsA(isA<JsonSerializeException>()),
+        );
+      });
     });
   });
 }

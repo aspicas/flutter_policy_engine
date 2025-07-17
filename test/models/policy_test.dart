@@ -528,6 +528,64 @@ void main() {
 
         expect(() => Policy.fromJson(json), throwsA(isA<ArgumentError>()));
       });
+
+      test('should handle non-string items in allowedContent', () {
+        final json = {
+          'roleName': 'admin',
+          'allowedContent': ['read', 123, 'write'], // contains non-string
+        };
+
+        expect(() => Policy.fromJson(json), throwsA(isA<ArgumentError>()));
+      });
+    });
+
+    group('hashCode', () {
+      test('should generate consistent hash codes for equal policies', () {
+        const policy1 = Policy(
+          roleName: 'admin',
+          allowedContent: ['read', 'write'],
+        );
+        const policy2 = Policy(
+          roleName: 'admin',
+          allowedContent: ['write', 'read'], // different order
+        );
+
+        expect(policy1.hashCode, equals(policy2.hashCode));
+      });
+
+      test('should generate different hash codes for different policies', () {
+        const policy1 = Policy(
+          roleName: 'admin',
+          allowedContent: ['read', 'write'],
+        );
+        const policy2 = Policy(
+          roleName: 'user',
+          allowedContent: ['read', 'write'],
+        );
+
+        expect(policy1.hashCode, isNot(equals(policy2.hashCode)));
+      });
+
+      test('should handle empty allowedContent in hashCode', () {
+        const policy = Policy(
+          roleName: 'admin',
+          allowedContent: [],
+        );
+
+        expect(policy.hashCode, isA<int>());
+        expect(policy.hashCode, isNot(equals(0)));
+      });
+
+      test('should handle large allowedContent lists in hashCode', () {
+        final largeContentList = List.generate(100, (i) => 'content_$i');
+        final policy = Policy(
+          roleName: 'admin',
+          allowedContent: largeContentList,
+        );
+
+        expect(policy.hashCode, isA<int>());
+        expect(policy.hashCode, isNot(equals(0)));
+      });
     });
   });
 }
