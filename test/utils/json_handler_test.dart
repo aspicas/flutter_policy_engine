@@ -1,4 +1,5 @@
-import 'package:flutter_policy_engine/src/exceptions/policy_sdk_exceptions.dart';
+import 'package:flutter_policy_engine/src/exceptions/json_parse_exception.dart';
+import 'package:flutter_policy_engine/src/exceptions/json_serialize_exception.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_policy_engine/src/utils/json_handler.dart';
 

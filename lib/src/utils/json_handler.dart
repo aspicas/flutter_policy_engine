@@ -1,4 +1,5 @@
-import 'package:flutter_policy_engine/src/exceptions/policy_sdk_exceptions.dart';
+import 'package:flutter_policy_engine/src/exceptions/json_parse_exception.dart';
+import 'package:flutter_policy_engine/src/exceptions/json_serialize_exception.dart';
 import 'package:flutter_policy_engine/src/utils/log_handler.dart';
 
 /// Utility for type-safe JSON conversions with generic support.
