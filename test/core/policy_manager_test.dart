@@ -67,8 +67,7 @@ class MockPolicyEvaluator implements IPolicyEvaluator {
 
 class ThrowingPolicy extends Policy {
   const ThrowingPolicy(
-      {required String roleName, required List<String> allowedContent})
-      : super(roleName: roleName, allowedContent: allowedContent);
+      {required super.roleName, required super.allowedContent});
 
   static Policy fromJson(Map<String, dynamic> json) {
     throw StateError('Forced error in fromJson');

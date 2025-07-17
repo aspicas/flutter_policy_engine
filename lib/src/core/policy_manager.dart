@@ -86,54 +86,43 @@ class PolicyManager extends ChangeNotifier {
         final key = entry.key;
         final value = entry.value;
 
-        try {
-          if (value == null) {
-            LogHandler.warning(
-              'Skipping null policy value',
-              context: {'role': key},
-              operation: 'policy_validation_skip',
-            );
-            continue;
-          }
-
-          if (value is! List) {
-            LogHandler.warning(
-              'Skipping invalid policy value type',
-              context: {
-                'role': key,
-                'expected_type': 'List',
-                'actual_type': value.runtimeType.toString(),
-              },
-              operation: 'policy_validation_skip',
-            );
-            continue;
-          }
-
-          if (value.any((item) => item is! String)) {
-            LogHandler.warning(
-              'Skipping policy with non-string content items',
-              context: {'role': key},
-              operation: 'policy_validation_skip',
-            );
-            continue;
-          }
-
-          // Create the policy and add to valid policies
-          final policy = Policy(
-            roleName: key,
-            allowedContent: value.cast<String>(),
-          );
-          validPolicies[key] = policy.toJson();
-        } catch (e, stackTrace) {
-          LogHandler.error(
-            'Failed to process policy',
-            error: e,
-            stackTrace: stackTrace,
+        if (value == null) {
+          LogHandler.warning(
+            'Skipping null policy value',
             context: {'role': key},
-            operation: 'policy_processing_error',
+            operation: 'policy_validation_skip',
           );
-          // Continue with other policies
+          continue;
         }
+
+        if (value is! List) {
+          LogHandler.warning(
+            'Skipping invalid policy value type',
+            context: {
+              'role': key,
+              'expected_type': 'List',
+              'actual_type': value.runtimeType.toString(),
+            },
+            operation: 'policy_validation_skip',
+          );
+          continue;
+        }
+
+        if (value.any((item) => item is! String)) {
+          LogHandler.warning(
+            'Skipping policy with non-string content items',
+            context: {'role': key},
+            operation: 'policy_validation_skip',
+          );
+          continue;
+        }
+
+        // Create the policy and add to valid policies
+        final policy = Policy(
+          roleName: key,
+          allowedContent: value.cast<String>(),
+        );
+        validPolicies[key] = policy.toJson();
       }
 
       _policies = JsonHandler.parseMap(
