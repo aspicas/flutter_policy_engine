@@ -31,6 +31,23 @@ The setup script will:
 - Initialize Husky for git hooks (if present)
 - Add `.fvm/` to `.gitignore` if needed
 
+## Testing
+
+### Local Testing
+
+Run tests with coverage locally:
+
+```bash
+# Using the provided script (recommended)
+./scripts/test_with_coverage.sh
+
+# Or manually
+fvm flutter test --coverage
+lcov --summary coverage/lcov.info
+genhtml coverage/lcov.info -o coverage/html
+open coverage/html/index.html
+```
+
 ## Contributing
 
 Contributions are welcome! Please:
@@ -38,6 +55,7 @@ Contributions are welcome! Please:
 - Follow the existing code style and patterns
 - Write clear commit messages (Commitlint and Husky are enabled)
 - Add or update tests for new features or bug fixes
+- Ensure all tests pass before submitting a pull request
 - Open a pull request with a clear description
 
 ## License
