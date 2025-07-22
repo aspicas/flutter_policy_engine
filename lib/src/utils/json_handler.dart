@@ -229,7 +229,7 @@ class JsonHandler {
     return result;
   }
 
-  /// Validates if a value can be safely cast to Map<String, dynamic>
+  /// Validates if a value can be safely cast to Map&lt;String, dynamic&gt;
   static bool isValidJsonMap(dynamic value) {
     return value is Map<String, dynamic>;
   }

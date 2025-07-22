@@ -10,7 +10,6 @@ topics:
   - policy
   - engine
   - authorization
-publish_to: "https://pub.dev"
 # funding:
 #   - https://github.com/sponsors/davidgarcia93
 # maintainers:
@@ -30,6 +29,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  lints: ^4.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
