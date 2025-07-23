@@ -1,0 +1,235 @@
+---
+title: Quick Start
+description: Get up and running with Flutter Policy Engine in minutes
+---
+
+# Quick Start Guide
+
+Get started with Flutter Policy Engine in just a few minutes. This guide will walk you through the basic setup and show you how to implement role-based access control in your Flutter app.
+
+## 📦 Installation
+
+Add the Flutter Policy Engine to your `pubspec.yaml`:
+
+```yaml
+dependencies:
+  flutter_policy_engine: ^1.0.0
+```
+
+Then run:
+
+```bash
+flutter pub get
+```
+
+## 🚀 Basic Setup
+
+### 1. Import the Package
+
+```dart
+import 'package:flutter_policy_engine/flutter_policy_engine.dart';
+```
+
+### 2. Initialize Policy Manager
+
+Create a `PolicyManager` instance and initialize it with your role definitions:
+
+```dart
+final policyManager = PolicyManager();
+
+// Define your roles and their permissions
+final policies = {
+  "admin": ["LoginPage", "Dashboard", "UserManagement", "Settings"],
+  "user": ["LoginPage", "Dashboard"],
+  "guest": ["LoginPage"]
+};
+
+// Initialize the policy manager
+await policyManager.initialize(policies);
+```
+
+### 3. Wrap Your App with PolicyProvider
+
+Wrap your main app widget with `PolicyProvider` to make the policy manager available throughout your widget tree:
+
+```dart
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return PolicyProvider(
+      policyManager: policyManager,
+      child: MaterialApp(
+        title: 'My App',
+        home: MyHomePage(),
+      ),
+    );
+  }
+}
+```
+
+### 4. Use PolicyWidget for Conditional Rendering
+
+Use `PolicyWidget` to conditionally render content based on user roles:
+
+```dart
+PolicyWidget(
+  role: "admin",
+  content: "UserManagement",
+  child: UserManagementPage(),
+  fallback: AccessDeniedWidget(),
+)
+```
+
+## 📱 Complete Example
+
+Here's a complete working example that demonstrates the basic functionality:
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_policy_engine/flutter_policy_engine.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize policy manager
+  final policyManager = PolicyManager();
+  await policyManager.initialize({
+    "admin": ["LoginPage", "Dashboard", "UserManagement", "Settings"],
+    "user": ["LoginPage", "Dashboard"],
+    "guest": ["LoginPage"]
+  });
+
+  runApp(MyApp(policyManager: policyManager));
+}
+
+class MyApp extends StatelessWidget {
+  final PolicyManager policyManager;
+
+  const MyApp({Key? key, required this.policyManager}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return PolicyProvider(
+      policyManager: policyManager,
+      child: MaterialApp(
+        title: 'Policy Engine Demo',
+        theme: ThemeData(primarySwatch: Colors.blue),
+        home: HomePage(),
+      ),
+    );
+  }
+}
+
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  String currentRole = 'guest';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Policy Engine Demo')),
+      body: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Current Role: $currentRole',
+                 style: Theme.of(context).textTheme.headlineSmall),
+            SizedBox(height: 16),
+
+            // Role selector
+            Row(
+              children: ['guest', 'user', 'admin'].map((role) =>
+                Padding(
+                  padding: EdgeInsets.only(right: 8),
+                  child: ElevatedButton(
+                    onPressed: () => setState(() => currentRole = role),
+                    child: Text(role),
+                  ),
+                )
+              ).toList(),
+            ),
+
+            SizedBox(height: 32),
+
+            // Policy widgets
+            PolicyWidget(
+              role: currentRole,
+              content: "Dashboard",
+              child: Card(
+                color: Colors.green[100],
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text('Dashboard Access Granted'),
+                ),
+              ),
+              fallback: Card(
+                color: Colors.red[100],
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text('Dashboard Access Denied'),
+                ),
+              ),
+            ),
+
+            SizedBox(height: 16),
+
+            PolicyWidget(
+              role: currentRole,
+              content: "UserManagement",
+              child: Card(
+                color: Colors.green[100],
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text('User Management Access Granted'),
+                ),
+              ),
+              fallback: Card(
+                color: Colors.red[100],
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text('User Management Access Denied'),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+## 🎯 What You've Learned
+
+In this quick start guide, you've learned how to:
+
+1. **Install** the Flutter Policy Engine package
+2. **Initialize** a policy manager with role definitions
+3. **Provide** policy context to your app
+4. **Use** PolicyWidget for conditional rendering
+5. **Test** different roles and permissions
+
+## 🔄 Next Steps
+
+Now that you have the basics working, explore these next topics:
+
+- **[Policy Management](/core-concepts/policy-management)**: Learn about dynamic role management
+- **[Role-Based Access Control](/core-concepts/role-based-access)**: Understand the RBAC concepts
+- **[Examples](/examples/basic-policy-demo)**: See more complex examples
+- **[API Reference](/api/policy-manager)**: Dive into the complete API documentation
+
+## 🐛 Troubleshooting
+
+If you encounter any issues:
+
+1. **Make sure** you've run `flutter pub get`
+2. **Check** that you're using the latest version of Flutter
+3. **Verify** your role definitions are properly formatted
+4. **Ensure** PolicyProvider wraps your app correctly
+
+For more help, check the [Error Handling](/advanced/error-handling) guide or open an issue on GitHub.
