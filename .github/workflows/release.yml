@@ -3,10 +3,11 @@ name: 🚀 Release
 on:
   push:
     branches:
-      - main # The branch you want to release from
+      - develop # Moved to develop branch for testing releases
 
 jobs:
   release:
+    name: Release
     runs-on: ubuntu-latest
 
     steps:
