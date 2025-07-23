@@ -194,4 +194,80 @@ class PolicyManager extends ChangeNotifier {
     }
     return _evaluator!.evaluate(role, content);
   }
+
+  /// Adds a new role to the policy manager.
+  ///
+  /// Adds the specified [role] to the internal policy cache and updates the
+  /// evaluator with the new role configuration. The role is also persisted
+  /// to storage and listeners are notified of the change.
+  ///
+  /// If a role with the same name already exists, it will be overwritten.
+  ///
+  /// [role] must not be null and should have a valid name.
+  ///
+  /// Throws:
+  /// - [ArgumentError] if [role] is null or has an invalid name
+  /// - Storage-related exceptions if persistence fails
+  Future<void> addRole(Role role) async {
+    if (role.name.isEmpty) {
+      throw ArgumentError('Role name cannot be empty');
+    }
+
+    _roles[role.name] = role;
+    _evaluator = RoleEvaluator(_roles);
+    await _storage.savePolicies(_roles);
+    notifyListeners();
+  }
+
+  /// Removes a role from the policy manager.
+  ///
+  /// Removes the role identified by [roleName] from the internal policy cache
+  /// and updates the evaluator with the modified role configuration. The
+  /// updated policy state is persisted to storage and listeners are notified
+  /// of the change.
+  ///
+  /// If no role exists with the specified [roleName], the operation completes
+  /// successfully without any changes.
+  ///
+  /// [roleName] must not be null or empty.
+  ///
+  /// Throws:
+  /// - [ArgumentError] if [roleName] is null or empty
+  /// - Storage-related exceptions if persistence fails
+  Future<void> removeRole(String roleName) async {
+    if (roleName.isEmpty) {
+      throw ArgumentError('Role name cannot be empty');
+    }
+
+    _roles.remove(roleName);
+    _evaluator = RoleEvaluator(_roles);
+    await _storage.savePolicies(_roles);
+    notifyListeners();
+  }
+
+  /// Updates an existing role in the policy manager.
+  ///
+  /// Replaces the role identified by [roleName] with the new [role] configuration.
+  /// The evaluator is updated with the modified role configuration, the updated
+  /// policy state is persisted to storage, and listeners are notified of the change.
+  ///
+  /// If no role exists with the specified [roleName], a new role is added instead.
+  /// This method effectively combines the functionality of [addRole] and [removeRole].
+  ///
+  /// [roleName] must not be null or empty.
+  /// [role] must not be null and should have a valid name.
+  ///
+  /// Throws:
+  /// - [ArgumentError] if [roleName] is null/empty or [role] is null/invalid
+  /// - Storage-related exceptions if persistence fails
+  Future<void> updateRole(String roleName, Role role) async {
+    if (roleName.isEmpty && role.name.isEmpty) {
+      throw ArgumentError('Role name cannot be empty');
+    }
+
+    _roles[roleName] = role;
+    _evaluator = RoleEvaluator(_roles);
+    await _storage.savePolicies(_roles);
+    notifyListeners();
+  }
 }
