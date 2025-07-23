@@ -2,12 +2,15 @@ name: Flutter Tests & Coverage
 
 on:
   push:
-    branches: [main, develop]
+    branches:
+      - develop
   pull_request:
-    branches: [main, develop]
+    branches:
+      - develop
 
 jobs:
   test:
+    name: Flutter Tests & Coverage
     runs-on: ubuntu-latest
 
     steps:

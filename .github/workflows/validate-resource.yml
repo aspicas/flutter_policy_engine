@@ -1,15 +1,24 @@
 name: Validate merge source
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches:
+      - main
 
 jobs:
-  validate:
+  validate-resource:
+    name: Validate merge source
     runs-on: ubuntu-latest
+    outputs:
+      validated: ${{ steps.validate.outputs.result }}
     steps:
       - name: Check source branch
+        id: validate
         run: |
           if [ "${{ github.head_ref }}" != "develop" ]; then
             echo "Error: Only develop branch can merge to main"
+            echo "result=failure" >> $GITHUB_OUTPUT
             exit 1
+          else
+            echo "Validation passed - source branch is develop"
+            echo "result=success" >> $GITHUB_OUTPUT
           fi
