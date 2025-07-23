@@ -1,0 +1,293 @@
+---
+title: Basic Policy Demo
+description: Simple role-based access control demonstration
+---
+
+# Basic Policy Demo
+
+This example demonstrates the fundamental usage of the Flutter Policy Engine with a simple role-based access control system. The demo shows how to initialize policies, switch between roles, and conditionally render content based on permissions.
+
+## 🎯 Demo Overview
+
+The Basic Policy Demo includes:
+
+- **Role Selection**: Interactive buttons to switch between different user roles
+- **Policy Evaluation**: Real-time display of access permissions for different content
+- **Visual Feedback**: Color-coded cards showing granted (green) or denied (red) access
+- **Dynamic Updates**: UI updates immediately when roles change
+
+## 📱 Complete Demo Code
+
+```dart
+import 'dart:developer';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_policy_engine/flutter_policy_engine.dart';
+import 'package:flutter_policy_engine_example/demo_content.dart';
+
+class PolicyEngineDemo extends StatefulWidget {
+  const PolicyEngineDemo({super.key});
+
+  @override
+  State<StatefulWidget> createState() {
+    return _PolicyEngineDemoState();
+  }
+}
+
+class _PolicyEngineDemoState extends State<PolicyEngineDemo> {
+  late PolicyManager policyManager;
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializePolicyManager();
+  }
+
+  Future<void> _initializePolicyManager() async {
+    policyManager = PolicyManager();
+    final policies = {
+      "admin": ["LoginPage", "Dashboard", "UserManagement", "Settings"],
+      "user": ["LoginPage", "Dashboard"],
+      "guest": ["LoginPage"]
+    };
+    try {
+      await policyManager.initialize(policies);
+      setState(() {
+        _isInitialized = true;
+      });
+    } catch (e) {
+      log(e.toString());
+      setState(() {
+        _isInitialized = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_isInitialized) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Policy Engine Demo'),
+        ),
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Loading policies...'),
+            ],
+          ),
+        ),
+      );
+    }
+    return PolicyProvider(
+      policyManager: policyManager,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Policy Engine Demo'),
+        ),
+        body: const DemoContent(),
+      ),
+    );
+  }
+}
+```
+
+## 🎨 Demo Content Widget
+
+The `DemoContent` widget provides the interactive interface for testing policies:
+
+```dart
+import 'dart:developer';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_policy_engine/flutter_policy_engine.dart';
+
+class DemoContent extends StatefulWidget {
+  const DemoContent({super.key});
+
+  @override
+  State<DemoContent> createState() => _DemoContentState();
+}
+
+class _DemoContentState extends State<DemoContent> {
+  String _currentRole = 'guest';
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Current Role: $_currentRole',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 16),
+
+          // Role selector
+          Row(
+            children: [
+              _buildRoleButton('guest'),
+              const SizedBox(width: 8),
+              _buildRoleButton('user'),
+              const SizedBox(width: 8),
+              _buildRoleButton('admin'),
+            ],
+          ),
+
+          const SizedBox(height: 32),
+
+          // Policy examples
+          _buildPolicyExample('LoginPage', 'Login Page'),
+          _buildPolicyExample('Dashboard', 'Dashboard'),
+          _buildPolicyExample('UserManagement', 'User Management'),
+          _buildPolicyExample('Settings', 'Settings'),
+
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRoleButton(String role) {
+    return ElevatedButton(
+      onPressed: () {
+        setState(() {
+          _currentRole = role;
+        });
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: _currentRole == role ? Colors.blue : Colors.grey,
+      ),
+      child: Text(role),
+    );
+  }
+
+  Widget _buildPolicyExample(String content, String displayName) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('$displayName:'),
+          const SizedBox(height: 4),
+          PolicyWidget(
+            role: _currentRole,
+            content: content,
+            fallback: Card(
+              color: Colors.red[100],
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text('Access denied for $displayName'),
+              ),
+            ),
+            onAccessDenied: () {
+              log('Access denied for $_currentRole to $content');
+            },
+            child: Card(
+              color: Colors.green[100],
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text('Access granted to $displayName'),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+## 🔧 Key Components Explained
+
+### 1. Policy Initialization
+
+```dart
+final policies = {
+  "admin": ["LoginPage", "Dashboard", "UserManagement", "Settings"],
+  "user": ["LoginPage", "Dashboard"],
+  "guest": ["LoginPage"]
+};
+```
+
+This defines three roles with different permission levels:
+
+- **admin**: Full access to all features
+- **user**: Access to login and dashboard
+- **guest**: Limited to login page only
+
+### 2. PolicyProvider Setup
+
+```dart
+PolicyProvider(
+  policyManager: policyManager,
+  child: Scaffold(
+    // Your app content
+  ),
+)
+```
+
+The `PolicyProvider` makes the policy manager available to all child widgets in the widget tree.
+
+### 3. PolicyWidget Usage
+
+```dart
+PolicyWidget(
+  role: _currentRole,
+  content: "Dashboard",
+  child: Card(
+    color: Colors.green[100],
+    child: Text('Access granted to Dashboard'),
+  ),
+  fallback: Card(
+    color: Colors.red[100],
+    child: Text('Access denied for Dashboard'),
+  ),
+)
+```
+
+The `PolicyWidget` conditionally renders content based on the user's role and the requested content type.
+
+## 🎮 How to Use the Demo
+
+1. **Launch the Demo**: Run the example app and navigate to "Basic Policy Demo"
+2. **Select Roles**: Click on different role buttons (guest, user, admin)
+3. **Observe Changes**: Watch how the content cards change color based on permissions
+4. **Test Permissions**: Notice which features are accessible for each role
+
+## 📊 Expected Behavior
+
+| Role  | Login Page | Dashboard | User Management | Settings |
+| ----- | ---------- | --------- | --------------- | -------- |
+| Guest | ✅ Green   | ❌ Red    | ❌ Red          | ❌ Red   |
+| User  | ✅ Green   | ✅ Green  | ❌ Red          | ❌ Red   |
+| Admin | ✅ Green   | ✅ Green  | ✅ Green        | ✅ Green |
+
+## 🔍 Key Learning Points
+
+1. **Role-Based Access**: Different roles have different permission levels
+2. **Dynamic Evaluation**: Policies are evaluated in real-time as roles change
+3. **Visual Feedback**: Clear visual indicators show access status
+4. **Fallback Handling**: Graceful handling when access is denied
+5. **Logging**: Access denials are logged for debugging
+
+## 🚀 Running the Demo
+
+To run this demo:
+
+1. Navigate to the example directory
+2. Run `flutter pub get`
+3. Execute `flutter run`
+4. Select "Basic Policy Demo" from the main menu
+
+## 🔄 Next Steps
+
+After exploring the basic demo:
+
+- **[Role Management Demo](/examples/role-management-demo)**: Dynamic role management capabilities

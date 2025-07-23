@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_policy_engine/src/core/policy_manager.dart';
 import 'package:flutter_policy_engine/src/core/interfaces/i_policy_evaluator.dart';
 import 'package:flutter_policy_engine/src/core/interfaces/i_policy_storage.dart';
-import 'package:flutter_policy_engine/src/models/policy.dart';
+import 'package:flutter_policy_engine/src/models/role.dart';
 import 'package:flutter_policy_engine/src/utils/json_handler.dart';
 import 'package:flutter_policy_engine/src/exceptions/json_parse_exception.dart';
 
@@ -65,11 +65,10 @@ class MockPolicyEvaluator implements IPolicyEvaluator {
   }
 }
 
-class ThrowingPolicy extends Policy {
-  const ThrowingPolicy(
-      {required super.roleName, required super.allowedContent});
+class ThrowingPolicy extends Role {
+  const ThrowingPolicy({required super.name, required super.allowedContent});
 
-  static Policy fromJson(Map<String, dynamic> json) {
+  static Role fromJson(Map<String, dynamic> json) {
     throw StateError('Forced error in fromJson');
   }
 }
@@ -95,7 +94,7 @@ void main() {
         final manager = PolicyManager();
         expect(manager, isA<PolicyManager>());
         expect(manager.isInitialized, isFalse);
-        expect(manager.policies, isEmpty);
+        expect(manager.roles, isEmpty);
       });
 
       test('should create instance with custom storage and evaluator', () {
@@ -105,7 +104,7 @@ void main() {
         );
         expect(manager, isA<PolicyManager>());
         expect(manager.isInitialized, isFalse);
-        expect(manager.policies, isEmpty);
+        expect(manager.roles, isEmpty);
       });
 
       test('should extend ChangeNotifier', () {
@@ -119,13 +118,13 @@ void main() {
       });
 
       test('should have empty policies by default', () {
-        expect(policyManager.policies, isEmpty);
+        expect(policyManager.roles, isEmpty);
       });
 
       test('should return unmodifiable policies map', () {
         expect(
-            () => policyManager.policies['test'] =
-                const Policy(roleName: 'test', allowedContent: ['read']),
+            () => policyManager.roles['test'] =
+                const Role(name: 'test', allowedContent: ['read']),
             throwsA(isA<UnsupportedError>()));
       });
     });
@@ -140,13 +139,13 @@ void main() {
         await policyManager.initialize(jsonPolicies);
 
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies.length, equals(2));
-        expect(policyManager.policies['admin'], isA<Policy>());
-        expect(policyManager.policies['user'], isA<Policy>());
-        expect(policyManager.policies['admin']!.allowedContent,
+        expect(policyManager.roles.length, equals(2));
+        expect(policyManager.roles['admin'], isA<Role>());
+        expect(policyManager.roles['user'], isA<Role>());
+        expect(policyManager.roles['admin']!.allowedContent,
             containsAll(['read', 'write', 'delete']));
-        expect(policyManager.policies['user']!.allowedContent,
-            containsAll(['read']));
+        expect(
+            policyManager.roles['user']!.allowedContent, containsAll(['read']));
       });
 
       test('should handle empty policies gracefully', () async {
@@ -155,7 +154,7 @@ void main() {
         await policyManager.initialize(jsonPolicies);
 
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies, isEmpty);
+        expect(policyManager.roles, isEmpty);
       });
 
       test('should handle single policy', () async {
@@ -166,9 +165,9 @@ void main() {
         await policyManager.initialize(jsonPolicies);
 
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies.length, equals(1));
-        expect(policyManager.policies['admin']!.roleName, equals('admin'));
-        expect(policyManager.policies['admin']!.allowedContent,
+        expect(policyManager.roles.length, equals(1));
+        expect(policyManager.roles['admin']!.name, equals('admin'));
+        expect(policyManager.roles['admin']!.allowedContent,
             containsAll(['read', 'write']));
       });
 
@@ -181,7 +180,7 @@ void main() {
         await policyManager.initialize(jsonPolicies);
 
         expect(mockStorage.storedPolicies.length, equals(1));
-        expect(mockStorage.storedPolicies['admin'], isA<Policy>());
+        expect(mockStorage.storedPolicies['admin'], isA<Role>());
       });
 
       test('should notify listeners after initialization', () async {
@@ -219,7 +218,7 @@ void main() {
 
         // Should initialize successfully but skip invalid policies
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies, isEmpty);
+        expect(policyManager.roles, isEmpty);
       });
 
       test('should handle null values in JSON data gracefully', () async {
@@ -231,7 +230,7 @@ void main() {
 
         // Should initialize successfully but skip null policies
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies, isEmpty);
+        expect(policyManager.roles, isEmpty);
       });
 
       test(
@@ -247,10 +246,10 @@ void main() {
 
         // Should still initialize with valid policies
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies.length, equals(2));
-        expect(policyManager.policies['admin'], isNotNull);
-        expect(policyManager.policies['guest'], isNotNull);
-        expect(policyManager.policies['user'], isNull);
+        expect(policyManager.roles.length, equals(2));
+        expect(policyManager.roles['admin'], isNotNull);
+        expect(policyManager.roles['guest'], isNotNull);
+        expect(policyManager.roles['user'], isNull);
       });
 
       test('should create RoleEvaluator when policies are available', () async {
@@ -273,20 +272,19 @@ void main() {
         await policyManager.initialize(jsonPolicies);
 
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies, isEmpty);
+        expect(policyManager.roles, isEmpty);
       });
 
       test('should handle exception in Policy.fromJson during initialization',
           () async {
         // Prepare a validPolicies map that will be passed to parseMap
         final validPolicies = {
-          'admin':
-              const Policy(roleName: 'admin', allowedContent: ['read', 'write'])
-                  .toJson(),
+          'admin': const Role(name: 'admin', allowedContent: ['read', 'write'])
+              .toJson(),
         };
 
         expect(
-          () => JsonHandler.parseMap<Policy>(
+          () => JsonHandler.parseMap<Role>(
             validPolicies,
             (json) => ThrowingPolicy.fromJson(json),
             allowPartialSuccess: false,
@@ -306,7 +304,7 @@ void main() {
         await policyManager.initialize(jsonPolicies);
 
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies.length, equals(1000));
+        expect(policyManager.roles.length, equals(1000));
       });
 
       test('should handle policies with empty allowed content', () async {
@@ -317,7 +315,7 @@ void main() {
         await policyManager.initialize(jsonPolicies);
 
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies['admin']!.allowedContent, isEmpty);
+        expect(policyManager.roles['admin']!.allowedContent, isEmpty);
       });
 
       test('should handle policies with duplicate content', () async {
@@ -328,7 +326,7 @@ void main() {
         await policyManager.initialize(jsonPolicies);
 
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies['admin']!.allowedContent,
+        expect(policyManager.roles['admin']!.allowedContent,
             containsAll(['read', 'write']));
       });
     });
@@ -362,7 +360,7 @@ void main() {
         await Future.wait(futures);
 
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies.length, equals(1));
+        expect(policyManager.roles.length, equals(1));
       });
 
       test('should handle policies with non-string content items', () async {
@@ -374,7 +372,7 @@ void main() {
 
         // Should initialize successfully but skip invalid policies
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies, isEmpty);
+        expect(policyManager.roles, isEmpty);
       });
 
       test('should handle policies with non-list values', () async {
@@ -386,7 +384,7 @@ void main() {
 
         // Should initialize successfully but skip invalid policies
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies, isEmpty);
+        expect(policyManager.roles, isEmpty);
       });
 
       test('should handle complete initialization failure gracefully',
@@ -401,7 +399,7 @@ void main() {
 
         // Should still mark as initialized even with no valid policies
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies, isEmpty);
+        expect(policyManager.roles, isEmpty);
       });
 
       test('should handle hasAccess when not initialized', () {
@@ -446,6 +444,448 @@ void main() {
           () => policyManager.initialize(jsonPolicies),
           throwsA(isA<StateError>()),
         );
+      });
+    });
+
+    group('addRole', () {
+      test('should add a new role successfully', () async {
+        await policyManager.initialize({});
+
+        const newRole = Role(name: 'editor', allowedContent: ['read', 'write']);
+        await policyManager.addRole(newRole);
+
+        expect(policyManager.roles['editor'], equals(newRole));
+        expect(policyManager.roles.length, equals(1));
+      });
+
+      test('should overwrite existing role with same name', () async {
+        await policyManager.initialize({
+          'admin': ['read', 'write'],
+        });
+
+        const updatedRole =
+            Role(name: 'admin', allowedContent: ['read', 'write', 'delete']);
+        await policyManager.addRole(updatedRole);
+
+        expect(policyManager.roles['admin'], equals(updatedRole));
+        expect(policyManager.roles['admin']!.allowedContent,
+            containsAll(['read', 'write', 'delete']));
+        expect(policyManager.roles.length, equals(1));
+      });
+
+      test('should throw ArgumentError for role with empty name', () async {
+        await policyManager.initialize({});
+
+        const invalidRole = Role(name: '', allowedContent: ['read']);
+
+        expect(
+          () => policyManager.addRole(invalidRole),
+          throwsA(isA<ArgumentError>()),
+        );
+      });
+
+      test('should save role to storage after adding', () async {
+        await policyManager.initialize({});
+
+        const newRole = Role(name: 'editor', allowedContent: ['read', 'write']);
+        await policyManager.addRole(newRole);
+
+        expect(mockStorage.storedPolicies['editor'], equals(newRole));
+      });
+
+      test('should notify listeners after adding role', () async {
+        await policyManager.initialize({});
+
+        bool listenerCalled = false;
+        policyManager.addListener(() {
+          listenerCalled = true;
+        });
+
+        const newRole = Role(name: 'editor', allowedContent: ['read', 'write']);
+        await policyManager.addRole(newRole);
+
+        expect(listenerCalled, isTrue);
+      });
+
+      test('should update evaluator after adding role', () async {
+        await policyManager.initialize({});
+
+        const newRole = Role(name: 'editor', allowedContent: ['read', 'write']);
+        await policyManager.addRole(newRole);
+
+        // The evaluator should be updated and functional
+        expect(policyManager.hasAccess('editor', 'read'), isTrue);
+        expect(policyManager.hasAccess('editor', 'write'), isTrue);
+        expect(policyManager.hasAccess('editor', 'delete'), isFalse);
+      });
+
+      test('should handle storage errors when adding role', () async {
+        await policyManager.initialize({});
+        mockStorage.setShouldThrowOnSave(true);
+
+        const newRole = Role(name: 'editor', allowedContent: ['read', 'write']);
+
+        expect(
+          () => policyManager.addRole(newRole),
+          throwsA(isA<StateError>()),
+        );
+      });
+
+      test('should handle multiple role additions', () async {
+        await policyManager.initialize({});
+
+        const role1 =
+            Role(name: 'admin', allowedContent: ['read', 'write', 'delete']);
+        const role2 = Role(name: 'user', allowedContent: ['read']);
+        const role3 = Role(name: 'guest', allowedContent: ['read']);
+
+        await policyManager.addRole(role1);
+        await policyManager.addRole(role2);
+        await policyManager.addRole(role3);
+
+        expect(policyManager.roles.length, equals(3));
+        expect(policyManager.roles['admin'], equals(role1));
+        expect(policyManager.roles['user'], equals(role2));
+        expect(policyManager.roles['guest'], equals(role3));
+      });
+    });
+
+    group('removeRole', () {
+      test('should remove existing role successfully', () async {
+        await policyManager.initialize({
+          'admin': ['read', 'write'],
+          'user': ['read'],
+        });
+
+        await policyManager.removeRole('admin');
+
+        expect(policyManager.roles['admin'], isNull);
+        expect(policyManager.roles['user'], isNotNull);
+        expect(policyManager.roles.length, equals(1));
+      });
+
+      test('should complete successfully when removing non-existent role',
+          () async {
+        await policyManager.initialize({
+          'admin': ['read', 'write'],
+        });
+
+        await policyManager.removeRole('non-existent');
+
+        expect(policyManager.roles['admin'], isNotNull);
+        expect(policyManager.roles.length, equals(1));
+      });
+
+      test('should throw ArgumentError for empty role name', () async {
+        await policyManager.initialize({
+          'admin': ['read', 'write'],
+        });
+
+        expect(
+          () => policyManager.removeRole(''),
+          throwsA(isA<ArgumentError>()),
+        );
+      });
+
+      test('should save updated policies to storage after removal', () async {
+        await policyManager.initialize({
+          'admin': ['read', 'write'],
+          'user': ['read'],
+        });
+
+        await policyManager.removeRole('admin');
+
+        expect(mockStorage.storedPolicies['admin'], isNull);
+        expect(mockStorage.storedPolicies['user'], isNotNull);
+        expect(mockStorage.storedPolicies.length, equals(1));
+      });
+
+      test('should notify listeners after removing role', () async {
+        await policyManager.initialize({
+          'admin': ['read', 'write'],
+          'user': ['read'],
+        });
+
+        bool listenerCalled = false;
+        policyManager.addListener(() {
+          listenerCalled = true;
+        });
+
+        await policyManager.removeRole('admin');
+
+        expect(listenerCalled, isTrue);
+      });
+
+      test('should update evaluator after removing role', () async {
+        await policyManager.initialize({
+          'admin': ['read', 'write'],
+          'user': ['read'],
+        });
+
+        await policyManager.removeRole('admin');
+
+        // The evaluator should be updated and reflect the removal
+        expect(policyManager.hasAccess('admin', 'read'), isFalse);
+        expect(policyManager.hasAccess('user', 'read'), isTrue);
+      });
+
+      test('should handle storage errors when removing role', () async {
+        await policyManager.initialize({
+          'admin': ['read', 'write'],
+        });
+
+        mockStorage.setShouldThrowOnSave(true);
+
+        expect(
+          () => policyManager.removeRole('admin'),
+          throwsA(isA<StateError>()),
+        );
+      });
+
+      test('should handle removing last role', () async {
+        await policyManager.initialize({
+          'admin': ['read', 'write'],
+        });
+
+        await policyManager.removeRole('admin');
+
+        expect(policyManager.roles, isEmpty);
+        expect(policyManager.hasAccess('admin', 'read'), isFalse);
+      });
+
+      test('should handle multiple role removals', () async {
+        await policyManager.initialize({
+          'admin': ['read', 'write'],
+          'user': ['read'],
+          'guest': ['read'],
+        });
+
+        await policyManager.removeRole('admin');
+        await policyManager.removeRole('user');
+
+        expect(policyManager.roles.length, equals(1));
+        expect(policyManager.roles['guest'], isNotNull);
+        expect(policyManager.roles['admin'], isNull);
+        expect(policyManager.roles['user'], isNull);
+      });
+    });
+
+    group('updateRole', () {
+      test('should update existing role successfully', () async {
+        await policyManager.initialize({
+          'admin': ['read', 'write'],
+        });
+
+        const updatedRole =
+            Role(name: 'admin', allowedContent: ['read', 'write', 'delete']);
+        await policyManager.updateRole('admin', updatedRole);
+
+        expect(policyManager.roles['admin'], equals(updatedRole));
+        expect(policyManager.roles['admin']!.allowedContent,
+            containsAll(['read', 'write', 'delete']));
+      });
+
+      test('should add new role when updating non-existent role', () async {
+        await policyManager.initialize({
+          'admin': ['read', 'write'],
+        });
+
+        const newRole = Role(name: 'editor', allowedContent: ['read', 'write']);
+        await policyManager.updateRole('editor', newRole);
+
+        expect(policyManager.roles['editor'], equals(newRole));
+        expect(policyManager.roles.length, equals(2));
+        expect(policyManager.roles['admin'], isNotNull);
+      });
+
+      test('should throw ArgumentError for empty role name', () async {
+        await policyManager.initialize({
+          'admin': ['read', 'write'],
+        });
+
+        const role = Role(name: '', allowedContent: ['read']);
+
+        expect(
+          () => policyManager.updateRole('', role),
+          throwsA(isA<ArgumentError>()),
+        );
+      });
+
+      test('should throw ArgumentError for role with empty name', () async {
+        await policyManager.initialize({
+          'admin': ['read', 'write'],
+        });
+
+        const invalidRole = Role(name: '', allowedContent: ['read']);
+
+        expect(
+          () => policyManager.updateRole('', invalidRole),
+          throwsA(isA<ArgumentError>()),
+        );
+      });
+
+      test('should save updated policies to storage', () async {
+        await policyManager.initialize({
+          'admin': ['read', 'write'],
+        });
+
+        const updatedRole =
+            Role(name: 'admin', allowedContent: ['read', 'write', 'delete']);
+        await policyManager.updateRole('admin', updatedRole);
+
+        expect(mockStorage.storedPolicies['admin'], equals(updatedRole));
+      });
+
+      test('should notify listeners after updating role', () async {
+        await policyManager.initialize({
+          'admin': ['read', 'write'],
+        });
+
+        bool listenerCalled = false;
+        policyManager.addListener(() {
+          listenerCalled = true;
+        });
+
+        const updatedRole =
+            Role(name: 'admin', allowedContent: ['read', 'write', 'delete']);
+        await policyManager.updateRole('admin', updatedRole);
+
+        expect(listenerCalled, isTrue);
+      });
+
+      test('should update evaluator after updating role', () async {
+        await policyManager.initialize({
+          'admin': ['read', 'write'],
+        });
+
+        const updatedRole =
+            Role(name: 'admin', allowedContent: ['read', 'write', 'delete']);
+        await policyManager.updateRole('admin', updatedRole);
+
+        // The evaluator should be updated and reflect the changes
+        expect(policyManager.hasAccess('admin', 'read'), isTrue);
+        expect(policyManager.hasAccess('admin', 'write'), isTrue);
+        expect(policyManager.hasAccess('admin', 'delete'), isTrue);
+        expect(policyManager.hasAccess('admin', 'execute'), isFalse);
+      });
+
+      test('should handle storage errors when updating role', () async {
+        await policyManager.initialize({
+          'admin': ['read', 'write'],
+        });
+
+        mockStorage.setShouldThrowOnSave(true);
+        const updatedRole =
+            Role(name: 'admin', allowedContent: ['read', 'write', 'delete']);
+
+        expect(
+          () => policyManager.updateRole('admin', updatedRole),
+          throwsA(isA<StateError>()),
+        );
+      });
+
+      test('should handle updating role with different name in parameter',
+          () async {
+        await policyManager.initialize({
+          'admin': ['read', 'write'],
+        });
+
+        const updatedRole = Role(
+            name: 'superadmin', allowedContent: ['read', 'write', 'delete']);
+        await policyManager.updateRole('admin', updatedRole);
+
+        // Should update the role at 'admin' key with the new role data
+        expect(policyManager.roles['admin'], equals(updatedRole));
+        expect(policyManager.roles['admin']!.name, equals('superadmin'));
+        expect(
+            policyManager.roles['superadmin'], isNull); // Key remains 'admin'
+      });
+
+      test('should handle multiple role updates', () async {
+        await policyManager.initialize({
+          'admin': ['read', 'write'],
+          'user': ['read'],
+        });
+
+        const updatedAdmin =
+            Role(name: 'admin', allowedContent: ['read', 'write', 'delete']);
+        const updatedUser =
+            Role(name: 'user', allowedContent: ['read', 'write']);
+
+        await policyManager.updateRole('admin', updatedAdmin);
+        await policyManager.updateRole('user', updatedUser);
+
+        expect(policyManager.roles['admin'], equals(updatedAdmin));
+        expect(policyManager.roles['user'], equals(updatedUser));
+        expect(policyManager.roles.length, equals(2));
+      });
+    });
+
+    group('Listener notifications', () {
+      test('should notify listeners on addRole', () async {
+        await policyManager.initialize({});
+
+        int notificationCount = 0;
+        policyManager.addListener(() {
+          notificationCount++;
+        });
+
+        const role = Role(name: 'admin', allowedContent: ['read']);
+        await policyManager.addRole(role);
+
+        expect(notificationCount, equals(1));
+      });
+
+      test('should notify listeners on removeRole', () async {
+        await policyManager.initialize({
+          'admin': ['read', 'write'],
+        });
+
+        int notificationCount = 0;
+        policyManager.addListener(() {
+          notificationCount++;
+        });
+
+        await policyManager.removeRole('admin');
+
+        expect(notificationCount, equals(1));
+      });
+
+      test('should notify listeners on updateRole', () async {
+        await policyManager.initialize({
+          'admin': ['read', 'write'],
+        });
+
+        int notificationCount = 0;
+        policyManager.addListener(() {
+          notificationCount++;
+        });
+
+        const updatedRole =
+            Role(name: 'admin', allowedContent: ['read', 'write', 'delete']);
+        await policyManager.updateRole('admin', updatedRole);
+
+        expect(notificationCount, equals(1));
+      });
+
+      test('should notify multiple listeners', () async {
+        await policyManager.initialize({});
+
+        int notificationCount1 = 0;
+        int notificationCount2 = 0;
+
+        policyManager.addListener(() {
+          notificationCount1++;
+        });
+        policyManager.addListener(() {
+          notificationCount2++;
+        });
+
+        const role = Role(name: 'admin', allowedContent: ['read']);
+        await policyManager.addRole(role);
+
+        expect(notificationCount1, equals(1));
+        expect(notificationCount2, equals(1));
       });
     });
   });

@@ -1,5 +1,5 @@
 import 'package:flutter_policy_engine/src/core/interfaces/i_policy_evaluator.dart';
-import 'package:flutter_policy_engine/src/models/policy.dart';
+import 'package:flutter_policy_engine/src/models/role.dart';
 import 'package:meta/meta.dart';
 
 /// A policy evaluator that determines access permissions based on role-based policies.
@@ -8,7 +8,7 @@ import 'package:meta/meta.dart';
 /// role-based access control functionality. It evaluates whether content is
 /// allowed for a specific role by checking against predefined policies.
 ///
-/// Each role is associated with a [Policy] that defines the rules for content
+/// Each role is associated with a [Role] that defines the rules for content
 /// evaluation. If no policy exists for a given role, access is denied by default.
 ///
 /// Example usage:
@@ -25,7 +25,7 @@ class RoleEvaluator implements IPolicyEvaluator {
   /// Creates a new [RoleEvaluator] with the specified policies.
   ///
   /// The [policies] parameter should contain a mapping of role names to their
-  /// corresponding [Policy] objects. Each policy defines the rules for content
+  /// corresponding [Role] objects. Each policy defines the rules for content
   /// evaluation for that specific role.
   ///
   /// Throws an [ArgumentError] if [policies] is null.
@@ -35,8 +35,8 @@ class RoleEvaluator implements IPolicyEvaluator {
   ///
   /// This map contains all available policies that can be evaluated by this
   /// evaluator. The key is the role name and the value is the corresponding
-  /// [Policy] object.
-  final Map<String, Policy> _policies;
+  /// [Role] object.
+  final Map<String, Role> _policies;
 
   /// Evaluates whether the specified content is allowed for the given role.
   ///
@@ -45,11 +45,11 @@ class RoleEvaluator implements IPolicyEvaluator {
   ///
   /// Returns `true` if:
   /// - A policy exists for the [roleName]
-  /// - The policy's [Policy.isContentAllowed] method returns `true` for the [content]
+  /// - The policy's [Role.isContentAllowed] method returns `true` for the [content]
   ///
   /// Returns `false` if:
   /// - No policy exists for the [roleName]
-  /// - The policy's [Policy.isContentAllowed] method returns `false` for the [content]
+  /// - The policy's [Role.isContentAllowed] method returns `false` for the [content]
   ///
   /// Parameters:
   /// - [roleName]: The name of the role to evaluate permissions for

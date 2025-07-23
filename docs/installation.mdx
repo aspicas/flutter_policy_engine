@@ -1,0 +1,198 @@
+---
+title: Installation
+description: Complete installation guide for Flutter Policy Engine
+---
+
+# Installation Guide
+
+This guide covers everything you need to install and set up the Flutter Policy Engine in your project.
+
+## 📋 Prerequisites
+
+Before installing Flutter Policy Engine, ensure you have:
+
+- **Flutter SDK**: Version 3.0.0 or higher
+- **Dart SDK**: Version 2.17.0 or higher
+- **Android Studio** or **VS Code** with Flutter extensions
+- **Git** for version control
+
+### Check Your Flutter Version
+
+```bash
+flutter --version
+```
+
+If you need to update Flutter:
+
+```bash
+flutter upgrade
+```
+
+## 📦 Package Installation
+
+### 1. Add to pubspec.yaml
+
+Add the Flutter Policy Engine dependency to your `pubspec.yaml` file:
+
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_policy_engine: ^1.0.0
+```
+
+### 2. Install Dependencies
+
+Run the following command to install the package:
+
+```bash
+flutter pub get
+```
+
+### 3. Verify Installation
+
+Check that the package was installed correctly:
+
+```bash
+flutter pub deps
+```
+
+You should see `flutter_policy_engine` listed in the dependencies.
+
+## 🔧 Platform-Specific Setup
+
+### Android
+
+No additional setup required for Android. The package works out of the box with Android apps.
+
+### iOS
+
+No additional setup required for iOS. The package works out of the box with iOS apps.
+
+### Web
+
+For Flutter web applications, ensure you have web support enabled:
+
+```bash
+flutter config --enable-web
+```
+
+### Desktop (Windows, macOS, Linux)
+
+For desktop applications, ensure you have desktop support enabled:
+
+```bash
+# For Windows
+flutter config --enable-windows-desktop
+
+# For macOS
+flutter config --enable-macos-desktop
+
+# For Linux
+flutter config --enable-linux-desktop
+```
+
+## 🧪 Testing the Installation
+
+Create a simple test to verify the installation:
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_policy_engine/flutter_policy_engine.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Test basic functionality
+  final policyManager = PolicyManager();
+  await policyManager.initialize({
+    "test": ["test_content"]
+  });
+
+  print("Flutter Policy Engine installed successfully!");
+
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Installation Test',
+      home: Scaffold(
+        appBar: AppBar(title: Text('Installation Test')),
+        body: Center(
+          child: Text('Flutter Policy Engine is working!'),
+        ),
+      ),
+    );
+  }
+}
+```
+
+## 🔄 Updating the Package
+
+To update to the latest version:
+
+```bash
+flutter pub upgrade flutter_policy_engine
+```
+
+To update to a specific version:
+
+```bash
+flutter pub add flutter_policy_engine:^1.1.0
+```
+
+## 🗑️ Uninstalling
+
+To remove the package from your project:
+
+1. Remove the dependency from `pubspec.yaml`
+2. Run `flutter pub get`
+3. Remove any import statements from your code
+
+## 🐛 Common Installation Issues
+
+### Issue: Package not found
+
+**Solution**: Ensure you have a stable internet connection and try:
+
+```bash
+flutter pub cache clean
+flutter pub get
+```
+
+### Issue: Version conflicts
+
+**Solution**: Check for version conflicts in your `pubspec.yaml`:
+
+```bash
+flutter pub deps --style=tree
+```
+
+### Issue: Flutter version compatibility
+
+**Solution**: Update Flutter to the latest stable version:
+
+```bash
+flutter upgrade
+flutter doctor
+```
+
+## 📚 Next Steps
+
+After successful installation:
+
+1. **[Quick Start](/quick-start)**: Get up and running in minutes
+2. **[Examples](/examples/basic-policy-demo)**: Explore working examples
+3. **[API Reference](/api/policy-manager)**: Learn about the available APIs
+
+## 🤝 Getting Help
+
+If you encounter installation issues:
+
+1. Check the [Flutter documentation](https://flutter.dev/docs)
+2. Review the [pub.dev package page](https://pub.dev/packages/flutter_policy_engine)
+3. Open an issue on the [GitHub repository](https://github.com/your-repo/flutter_policy_engine)
+4. Check the [troubleshooting guide](/advanced/error-handling)

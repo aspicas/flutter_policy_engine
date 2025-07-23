@@ -1,0 +1,611 @@
+---
+title: Role Management Demo
+description: Dynamic role creation, updating, and removal demonstration
+---
+
+# Role Management Demo
+
+This advanced example demonstrates the dynamic role management capabilities of the Flutter Policy Engine. The demo shows how to create, update, and remove roles at runtime, providing a comprehensive testing environment for policy management operations.
+
+## 🎯 Demo Overview
+
+The Role Management Demo provides:
+
+- **Dynamic Role Creation**: Add new roles with custom permissions
+- **Role Updates**: Modify existing role permissions
+- **Role Removal**: Delete roles from the system
+- **Real-time Testing**: Test policy changes immediately
+- **Interactive UI**: User-friendly forms for role management
+- **Status Feedback**: Clear feedback for all operations
+
+## 📱 Complete Demo Code
+
+```dart
+import 'dart:developer';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_policy_engine/flutter_policy_engine.dart';
+
+class RoleManagementDemo extends StatefulWidget {
+  const RoleManagementDemo({super.key});
+
+  @override
+  State<RoleManagementDemo> createState() => _RoleManagementDemoState();
+}
+
+class _RoleManagementDemoState extends State<RoleManagementDemo> {
+  late PolicyManager policyManager;
+  bool _isInitialized = false;
+  String _selectedRole = 'guest';
+
+  // Form controllers for role management
+  final TextEditingController _roleNameController = TextEditingController();
+  final TextEditingController _permissionsController = TextEditingController();
+
+  // Status messages
+  String _statusMessage = '';
+  bool _isSuccess = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializePolicyManager();
+  }
+
+  @override
+  void dispose() {
+    _roleNameController.dispose();
+    _permissionsController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initializePolicyManager() async {
+    policyManager = PolicyManager();
+    final policies = {
+      "admin": ["LoginPage", "Dashboard", "UserManagement", "Settings"],
+      "user": ["LoginPage", "Dashboard"],
+      "guest": ["LoginPage"]
+    };
+    try {
+      await policyManager.initialize(policies);
+      setState(() {
+        _isInitialized = true;
+        _selectedRole = 'guest';
+      });
+    } catch (e) {
+      log(e.toString());
+      setState(() {
+        _isInitialized = false;
+        _statusMessage = 'Failed to initialize: $e';
+        _isSuccess = false;
+      });
+    }
+  }
+
+  void _showStatus(String message, bool isSuccess) {
+    setState(() {
+      _statusMessage = message;
+      _isSuccess = isSuccess;
+    });
+
+    // Clear status after 3 seconds
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          _statusMessage = '';
+        });
+      }
+    });
+  }
+
+  Future<void> _addRole() async {
+    final roleName = _roleNameController.text.trim();
+    final permissionsText = _permissionsController.text.trim();
+
+    if (roleName.isEmpty) {
+      _showStatus('Role name cannot be empty', false);
+      return;
+    }
+
+    try {
+      final permissions = permissionsText.isEmpty
+          ? <String>[]
+          : permissionsText.split(',').map((e) => e.trim()).toList();
+
+      final role = Role(name: roleName, allowedContent: permissions);
+      await policyManager.addRole(role);
+
+      _showStatus('Role "$roleName" added successfully', true);
+      _roleNameController.clear();
+      _permissionsController.clear();
+
+      // Update selected role if it's the new one
+      setState(() {
+        _selectedRole = roleName;
+      });
+    } catch (e) {
+      _showStatus('Failed to add role: $e', false);
+    }
+  }
+
+  Future<void> _updateRole() async {
+    final roleName = _roleNameController.text.trim();
+    final permissionsText = _permissionsController.text.trim();
+
+    if (roleName.isEmpty) {
+      _showStatus('Role name cannot be empty', false);
+      return;
+    }
+
+    try {
+      final permissions = permissionsText.isEmpty
+          ? <String>[]
+          : permissionsText.split(',').map((e) => e.trim()).toList();
+
+      final role = Role(name: roleName, allowedContent: permissions);
+      await policyManager.updateRole(role);
+
+      _showStatus('Role "$roleName" updated successfully', true);
+      _roleNameController.clear();
+      _permissionsController.clear();
+    } catch (e) {
+      _showStatus('Failed to update role: $e', false);
+    }
+  }
+
+  Future<void> _removeRole() async {
+    final roleName = _roleNameController.text.trim();
+
+    if (roleName.isEmpty) {
+      _showStatus('Role name cannot be empty', false);
+      return;
+    }
+
+    try {
+      await policyManager.removeRole(roleName);
+
+      _showStatus('Role "$roleName" removed successfully', true);
+      _roleNameController.clear();
+      _permissionsController.clear();
+
+      // Reset selected role if it was removed
+      if (_selectedRole == roleName) {
+        setState(() {
+          _selectedRole = 'guest';
+        });
+      }
+    } catch (e) {
+      _showStatus('Failed to remove role: $e', false);
+    }
+  }
+
+  void _selectRole(String roleName) {
+    setState(() {
+      _selectedRole = roleName;
+      _roleNameController.text = roleName;
+
+      // Get current permissions for the role
+      final role = policyManager.getRole(roleName);
+      if (role != null) {
+        _permissionsController.text = role.allowedContent.join(', ');
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_isInitialized) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Role Management Demo'),
+        ),
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Loading policies...'),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return PolicyProvider(
+      policyManager: policyManager,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Role Management Demo'),
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Status message
+              if (_statusMessage.isNotEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: _isSuccess ? Colors.green[100] : Colors.red[100],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: _isSuccess ? Colors.green : Colors.red,
+                    ),
+                  ),
+                  child: Text(
+                    _statusMessage,
+                    style: TextStyle(
+                      color: _isSuccess ? Colors.green[800] : Colors.red[800],
+                    ),
+                  ),
+                ),
+
+              // Current roles section
+              _buildCurrentRolesSection(),
+
+              const SizedBox(height: 32),
+
+              // Role management forms
+              _buildRoleManagementForms(),
+
+              const SizedBox(height: 32),
+
+              // Policy testing section
+              _buildPolicyTestingSection(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCurrentRolesSection() {
+    final roles = policyManager.getAllRoles();
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Current Roles',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: roles.map((role) {
+                final isSelected = _selectedRole == role.name;
+                return GestureDetector(
+                  onTap: () => _selectRole(role.name),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected ? Colors.blue : Colors.grey[200],
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isSelected ? Colors.blue : Colors.grey[300]!,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          role.name,
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (role.allowedContent.isNotEmpty)
+                          Text(
+                            'Permissions: ${role.allowedContent.join(', ')}',
+                            style: TextStyle(
+                              color: isSelected ? Colors.white70 : Colors.grey[600],
+                              fontSize: 12,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoleManagementForms() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Role Management',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 16),
+
+            // Role name input
+            TextField(
+              controller: _roleNameController,
+              decoration: const InputDecoration(
+                labelText: 'Role Name',
+                hintText: 'Enter role name (e.g., moderator)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Permissions input
+            TextField(
+              controller: _permissionsController,
+              decoration: const InputDecoration(
+                labelText: 'Permissions',
+                hintText: 'Enter permissions separated by commas (e.g., LoginPage, Dashboard, Settings)',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 2,
+            ),
+
+            const SizedBox(height: 24),
+
+            // Action buttons
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _addRole,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Add Role'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _updateRole,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Update Role'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _removeRole,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Remove Role'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPolicyTestingSection() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Policy Testing',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Selected Role: $_selectedRole',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 16),
+
+            // Policy widgets for testing
+            _buildPolicyTest('LoginPage', 'Login Page'),
+            _buildPolicyTest('Dashboard', 'Dashboard'),
+            _buildPolicyTest('UserManagement', 'User Management'),
+            _buildPolicyTest('Settings', 'Settings'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPolicyTest(String content, String displayName) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('$displayName:'),
+          const SizedBox(height: 4),
+          PolicyWidget(
+            role: _selectedRole,
+            content: content,
+            fallback: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red[100],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red),
+              ),
+              child: Text('Access denied for $displayName'),
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green[100],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green),
+              ),
+              child: Text('Access granted to $displayName'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+## 🔧 Key Features Explained
+
+### 1. Dynamic Role Management
+
+The demo provides three main operations:
+
+#### Add Role
+
+```dart
+Future<void> _addRole() async {
+  final roleName = _roleNameController.text.trim();
+  final permissionsText = _permissionsController.text.trim();
+
+  final permissions = permissionsText.split(',').map((e) => e.trim()).toList();
+  final role = Role(name: roleName, allowedContent: permissions);
+  await policyManager.addRole(role);
+}
+```
+
+#### Update Role
+
+```dart
+Future<void> _updateRole() async {
+  final roleName = _roleNameController.text.trim();
+  final permissionsText = _permissionsController.text.trim();
+
+  final permissions = permissionsText.split(',').map((e) => e.trim()).toList();
+  final role = Role(name: roleName, allowedContent: permissions);
+  await policyManager.updateRole(role);
+}
+```
+
+#### Remove Role
+
+```dart
+Future<void> _removeRole() async {
+  final roleName = _roleNameController.text.trim();
+  await policyManager.removeRole(roleName);
+}
+```
+
+### 2. Interactive Role Selection
+
+```dart
+void _selectRole(String roleName) {
+  setState(() {
+    _selectedRole = roleName;
+    _roleNameController.text = roleName;
+
+    // Get current permissions for the role
+    final role = policyManager.getRole(roleName);
+    if (role != null) {
+      _permissionsController.text = role.allowedContent.join(', ');
+    }
+  });
+}
+```
+
+### 3. Status Feedback System
+
+```dart
+void _showStatus(String message, bool isSuccess) {
+  setState(() {
+    _statusMessage = message;
+    _isSuccess = isSuccess;
+  });
+
+  // Clear status after 3 seconds
+  Future.delayed(const Duration(seconds: 3), () {
+    if (mounted) {
+      setState(() {
+        _statusMessage = '';
+      });
+    }
+  });
+}
+```
+
+## 🎮 How to Use the Demo
+
+### Adding a New Role
+
+1. **Enter Role Name**: Type a new role name (e.g., "moderator")
+2. **Enter Permissions**: Add comma-separated permissions (e.g., "LoginPage, Dashboard, UserManagement")
+3. **Click "Add Role"**: The new role appears in the Current Roles section
+4. **Test the Role**: Select the new role to test its permissions
+
+### Updating an Existing Role
+
+1. **Select a Role**: Click on an existing role in the Current Roles section
+2. **Modify Permissions**: Update the permissions in the text field
+3. **Click "Update Role"**: The role's permissions are updated
+4. **Test Changes**: Verify the changes in the Policy Testing section
+
+### Removing a Role
+
+1. **Enter Role Name**: Type the name of the role to remove
+2. **Click "Remove Role"**: The role is deleted from the system
+3. **Verify Removal**: The role no longer appears in Current Roles
+
+## 📊 Testing Scenarios
+
+### Scenario 1: Create Moderator Role
+
+- **Role Name**: moderator
+- **Permissions**: LoginPage, Dashboard, UserManagement
+- **Expected Result**: Access to login, dashboard, and user management, but not settings
+
+### Scenario 2: Update User Role
+
+- **Original**: LoginPage, Dashboard
+- **Updated**: LoginPage, Dashboard, Settings
+- **Expected Result**: User role now has access to settings
+
+### Scenario 3: Remove Guest Role
+
+- **Action**: Remove guest role
+- **Expected Result**: Guest role disappears, cannot be selected
+
+## 🔍 Key Learning Points
+
+1. **Dynamic Operations**: Roles can be created, updated, and removed at runtime
+2. **Real-time Updates**: Policy changes take effect immediately
+3. **Error Handling**: Comprehensive error handling with user feedback
+4. **Form Validation**: Input validation prevents invalid operations
+5. **State Management**: Proper state management for UI updates
+6. **User Experience**: Intuitive interface with clear visual feedback
+
+## 🚀 Running the Demo
+
+To run this demo:
+
+1. Navigate to the example directory
+2. Run `flutter pub get`
+3. Execute `flutter run`
+4. Select "Role Management Demo" from the main menu

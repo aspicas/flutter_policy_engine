@@ -24,15 +24,15 @@ void main() {
         await policyManager.initialize(jsonPolicies);
 
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies.length, equals(3));
+        expect(policyManager.roles.length, equals(3));
 
         // Verify policies were created correctly
-        expect(policyManager.policies['admin']!.roleName, equals('admin'));
-        expect(policyManager.policies['admin']!.allowedContent,
+        expect(policyManager.roles['admin']!.name, equals('admin'));
+        expect(policyManager.roles['admin']!.allowedContent,
             containsAll(['read', 'write', 'delete']));
-        expect(policyManager.policies['user']!.allowedContent,
-            containsAll(['read']));
-        expect(policyManager.policies['guest']!.allowedContent, isEmpty);
+        expect(
+            policyManager.roles['user']!.allowedContent, containsAll(['read']));
+        expect(policyManager.roles['guest']!.allowedContent, isEmpty);
       });
 
       test('should persist policies to storage during initialization',
@@ -59,7 +59,7 @@ void main() {
         };
 
         await policyManager.initialize(initialPolicies);
-        expect(policyManager.policies.length, equals(2));
+        expect(policyManager.roles.length, equals(2));
 
         // Updated policies
         final updatedPolicies = {
@@ -68,12 +68,12 @@ void main() {
         };
 
         await policyManager.initialize(updatedPolicies);
-        expect(policyManager.policies.length, equals(2));
-        expect(policyManager.policies['admin']!.allowedContent,
+        expect(policyManager.roles.length, equals(2));
+        expect(policyManager.roles['admin']!.allowedContent,
             containsAll(['read', 'write', 'delete']));
-        expect(policyManager.policies['moderator']!.allowedContent,
+        expect(policyManager.roles['moderator']!.allowedContent,
             containsAll(['read', 'write']));
-        expect(policyManager.policies['user'], isNull); // Should be removed
+        expect(policyManager.roles['user'], isNull); // Should be removed
       });
     });
 
@@ -88,7 +88,7 @@ void main() {
         await policyManager.initialize(jsonPolicies);
 
         // Create evaluator with the loaded policies
-        final evaluator = RoleEvaluator(policyManager.policies);
+        final evaluator = RoleEvaluator(policyManager.roles);
 
         // Test admin permissions
         expect(evaluator.evaluate('admin', 'read'), isTrue);
@@ -115,7 +115,7 @@ void main() {
         };
 
         await policyManager.initialize(jsonPolicies);
-        final evaluator = RoleEvaluator(policyManager.policies);
+        final evaluator = RoleEvaluator(policyManager.roles);
 
         expect(evaluator.evaluate('admin', 'read'), isTrue);
         expect(evaluator.evaluate('admin', 'READ'), isFalse);
@@ -128,7 +128,7 @@ void main() {
         };
 
         await policyManager.initialize(jsonPolicies);
-        final evaluator = RoleEvaluator(policyManager.policies);
+        final evaluator = RoleEvaluator(policyManager.roles);
 
         expect(evaluator.evaluate('admin', 'read@domain'), isTrue);
         expect(evaluator.evaluate('admin', 'write-file'), isTrue);
@@ -149,12 +149,12 @@ void main() {
 
         // Verify storage has the same data
         final storedPolicies = await storage.loadPolicies();
-        expect(storedPolicies.length, equals(policyManager.policies.length));
+        expect(storedPolicies.length, equals(policyManager.roles.length));
 
         // Clear storage and verify manager is unaffected
         await storage.clearPolicies();
         expect(await storage.loadPolicies(), isEmpty);
-        expect(policyManager.policies.length,
+        expect(policyManager.roles.length,
             equals(2)); // Manager still has policies
       });
 
@@ -264,7 +264,7 @@ void main() {
 
         // Should initialize successfully but skip invalid policies
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies, isEmpty);
+        expect(policyManager.roles, isEmpty);
       });
 
       test('should handle partial failures gracefully', () async {
@@ -278,10 +278,10 @@ void main() {
 
         // Should still initialize with valid policies
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies.length, equals(2));
-        expect(policyManager.policies['admin'], isNotNull);
-        expect(policyManager.policies['guest'], isNotNull);
-        expect(policyManager.policies['user'], isNull);
+        expect(policyManager.roles.length, equals(2));
+        expect(policyManager.roles['admin'], isNotNull);
+        expect(policyManager.roles['guest'], isNotNull);
+        expect(policyManager.roles['user'], isNull);
       });
 
       test('should handle empty policy set', () async {
@@ -290,7 +290,7 @@ void main() {
         await policyManager.initialize(emptyPolicies);
 
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies, isEmpty);
+        expect(policyManager.roles, isEmpty);
       });
     });
 
@@ -306,7 +306,7 @@ void main() {
         stopwatch.stop();
 
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies.length, equals(1000));
+        expect(policyManager.roles.length, equals(1000));
         expect(stopwatch.elapsedMilliseconds,
             lessThan(5000)); // Should complete within 5 seconds
       });
@@ -318,7 +318,7 @@ void main() {
         };
 
         await policyManager.initialize(jsonPolicies);
-        final evaluator = RoleEvaluator(policyManager.policies);
+        final evaluator = RoleEvaluator(policyManager.roles);
 
         const iterations = 10000;
         final stopwatch = Stopwatch()..start();
@@ -350,7 +350,7 @@ void main() {
         };
 
         await policyManager.initialize(webAppPolicies);
-        final evaluator = RoleEvaluator(policyManager.policies);
+        final evaluator = RoleEvaluator(policyManager.roles);
 
         // Test role hierarchy
         expect(evaluator.evaluate('super_admin', 'manage_roles'), isTrue);
@@ -369,7 +369,7 @@ void main() {
         };
 
         await policyManager.initialize(fileSystemPolicies);
-        final evaluator = RoleEvaluator(policyManager.policies);
+        final evaluator = RoleEvaluator(policyManager.roles);
 
         // Test Unix-like permissions
         expect(evaluator.evaluate('root', 'chown'), isTrue);
@@ -386,7 +386,7 @@ void main() {
         };
 
         await policyManager.initialize(apiPolicies);
-        final evaluator = RoleEvaluator(policyManager.policies);
+        final evaluator = RoleEvaluator(policyManager.roles);
 
         // Test REST API permissions
         expect(evaluator.evaluate('admin', 'DELETE'), isTrue);

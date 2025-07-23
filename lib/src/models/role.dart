@@ -17,17 +17,17 @@ import 'package:collection/collection.dart';
 /// );
 /// ```
 @immutable
-class Policy {
+class Role {
   /// Creates a new policy with the specified role name and allowed content.
   ///
-  /// The [roleName] identifies the role this policy applies to.
+  /// The [name] identifies the role this policy applies to.
   /// The [allowedContent] list contains the content types or actions that are
   /// permitted for this role. The [metadata] provides additional configuration
   /// options and defaults to an empty map if not specified.
   ///
-  /// Throws an [ArgumentError] if [roleName] is empty or [allowedContent] is null.
-  const Policy({
-    required this.roleName,
+  /// Throws an [ArgumentError] if [name] is empty or [allowedContent] is null.
+  const Role({
+    required this.name,
     required this.allowedContent,
     this.metadata = const {},
   });
@@ -35,7 +35,7 @@ class Policy {
   /// The name of the role this policy applies to.
   ///
   /// This should be a unique identifier for the role within your application.
-  final String roleName;
+  final String name;
 
   /// List of content types or actions that are allowed for this role.
   ///
@@ -52,7 +52,7 @@ class Policy {
 
   /// Creates a copy of this policy with the given fields replaced by new values.
   ///
-  /// Returns a new [Policy] instance with the same values as this one,
+  /// Returns a new [Role] instance with the same values as this one,
   /// except for the fields that are explicitly provided in the parameters.
   ///
   /// Example:
@@ -62,13 +62,13 @@ class Policy {
   ///   metadata: {'priority': 'low'},
   /// );
   /// ```
-  Policy copyWith({
-    String? roleName,
+  Role copyWith({
+    String? name,
     List<String>? allowedContent,
     Map<String, dynamic>? metadata,
   }) =>
-      Policy(
-        roleName: roleName ?? this.roleName,
+      Role(
+        name: name ?? this.name,
         allowedContent: allowedContent ?? this.allowedContent,
         metadata: metadata ?? this.metadata,
       );
@@ -88,15 +88,15 @@ class Policy {
 
   /// Compares this policy with another object for equality.
   ///
-  /// Two policies are considered equal if they have the same [roleName] and
+  /// Two policies are considered equal if they have the same [name] and
   /// the same [allowedContent] (regardless of order). The [metadata] is not
   /// considered in the equality comparison.
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    if (other is! Policy) return false;
+    if (other is! Role) return false;
 
-    if (roleName != other.roleName) return false;
+    if (name != other.name) return false;
     if (allowedContent.length != other.allowedContent.length) return false;
 
     // Sort both lists to ensure order-independent comparison (same as hashCode)
@@ -108,12 +108,12 @@ class Policy {
 
   /// Returns the hash code for this policy.
   ///
-  /// The hash code is based on the [roleName] and [allowedContent] fields.
+  /// The hash code is based on the [name] and [allowedContent] fields.
   /// The allowedContent is sorted to ensure consistent hash codes regardless of order.
   @override
   int get hashCode {
     final sortedContent = List<String>.from(allowedContent)..sort();
-    return Object.hash(roleName, const ListEquality().hash(sortedContent));
+    return Object.hash(name, const ListEquality().hash(sortedContent));
   }
 
   /// Returns a string representation of this policy.
@@ -121,9 +121,9 @@ class Policy {
   /// The string includes the role name, allowed content, and metadata.
   @override
   String toString() =>
-      'Policy(roleName: $roleName, allowedContent: $allowedContent, metadata: $metadata)';
+      'Policy(roleName: $name, allowedContent: $allowedContent, metadata: $metadata)';
 
-  /// Creates a [Policy] instance from a JSON map.
+  /// Creates a [Role] instance from a JSON map.
   ///
   /// The JSON map should contain:
   /// - `roleName`: A string representing the role name
@@ -141,12 +141,12 @@ class Policy {
   /// };
   /// final policy = Policy.fromJson(json);
   /// ```
-  factory Policy.fromJson(Map<String, dynamic> json) {
-    final roleName = json['roleName'];
+  factory Role.fromJson(Map<String, dynamic> json) {
+    final name = json['roleName'];
     final allowedContent = json['allowedContent'];
     final metadata = json['metadata'];
 
-    if (roleName == null || roleName is! String) {
+    if (name == null || name is! String) {
       throw ArgumentError('roleName must be a non-null string');
     }
     if (allowedContent == null || allowedContent is! List) {
@@ -156,8 +156,8 @@ class Policy {
       throw ArgumentError('All allowedContent items must be strings');
     }
 
-    return Policy(
-      roleName: roleName,
+    return Role(
+      name: name,
       allowedContent: allowedContent.cast<String>(),
       metadata:
           metadata is Map<String, dynamic> ? metadata : <String, dynamic>{},
@@ -179,7 +179,7 @@ class Policy {
   /// // }
   /// ```
   Map<String, dynamic> toJson() => {
-        'roleName': roleName,
+        'roleName': name,
         'allowedContent': allowedContent,
         'metadata': metadata,
       };

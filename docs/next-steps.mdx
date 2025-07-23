@@ -1,0 +1,371 @@
+---
+title: Next Steps
+description: What to do after getting started with Flutter Policy Engine
+---
+
+# Next Steps
+
+Congratulations! You've successfully set up the Flutter Policy Engine. Here's what you can do next to make the most of this powerful policy management system.
+
+## 🚀 Immediate Next Steps
+
+### 1. Explore the Examples
+
+Start by running the example applications to see the Flutter Policy Engine in action:
+
+```bash
+cd example
+flutter run
+```
+
+**Try these demos**:
+
+- **[Basic Policy Demo](/examples/basic-policy-demo)**: Simple role-based access control
+- **[Role Management Demo](/examples/role-management-demo)**: Dynamic role creation and management
+- **[Interactive Testing](/examples/interactive-testing)**: Comprehensive testing tools
+
+### 2. Integrate into Your App
+
+Begin integrating the Flutter Policy Engine into your own application:
+
+```dart
+// 1. Initialize the policy manager
+final policyManager = PolicyManager();
+await policyManager.initialize({
+  "admin": ["LoginPage", "Dashboard", "UserManagement", "Settings"],
+  "user": ["LoginPage", "Dashboard"],
+  "guest": ["LoginPage"]
+});
+
+// 2. Wrap your app with PolicyProvider
+PolicyProvider(
+  policyManager: policyManager,
+  child: MaterialApp(
+    home: MyHomePage(),
+  ),
+);
+
+// 3. Use PolicyWidget for conditional rendering
+PolicyWidget(
+  role: currentUserRole,
+  content: "Dashboard",
+  child: DashboardPage(),
+  fallback: AccessDeniedWidget(),
+)
+```
+
+### 3. Customize Your Policies
+
+Define policies that match your application's needs:
+
+```dart
+// Example: E-commerce app policies
+final ecommercePolicies = {
+  "customer": ["Browse", "Cart", "Checkout", "Orders"],
+  "vendor": ["Browse", "Cart", "Checkout", "Orders", "Inventory", "Analytics"],
+  "admin": ["Browse", "Cart", "Checkout", "Orders", "Inventory", "Analytics", "UserManagement", "Settings"],
+  "guest": ["Browse"]
+};
+```
+
+## 📚 Learning Path
+
+### Beginner Level
+
+1. **[Quick Start](/quick-start)**: Master the basics
+2. **[Core Concepts](/core-concepts/policy-management)**: Understand policy management
+3. **[Basic Examples](/examples/basic-policy-demo)**: Run simple demos
+
+### Intermediate Level
+
+4. **[Role Management](/examples/role-management-demo)**: Learn dynamic role management
+5. **[Interactive Testing](/examples/interactive-testing)**: Master testing techniques
+6. **[API Reference](/api/policy-manager)**: Explore the complete API
+
+### Advanced Level
+
+7. **[Best Practices](/advanced/best-practices)**: Learn production patterns
+8. **[Custom Storage](/advanced/custom-storage)**: Implement custom storage
+9. **[Error Handling](/advanced/error-handling)**: Master error handling
+
+## 🎯 Common Use Cases
+
+### 1. User Authentication & Authorization
+
+```dart
+class AuthService {
+  final PolicyManager policyManager;
+
+  Future<void> loginUser(String username, String password) async {
+    // Authenticate user
+    final user = await authenticateUser(username, password);
+
+    // Set user role based on authentication result
+    final role = user.isAdmin ? "admin" : "user";
+
+    // Use role for policy evaluation
+    return role;
+  }
+}
+```
+
+### 2. Feature Flags
+
+```dart
+PolicyWidget(
+  role: currentUserRole,
+  content: "BetaFeature",
+  child: BetaFeatureWidget(),
+  fallback: Container(), // Hide feature for unauthorized users
+)
+```
+
+### 3. Content Management
+
+```dart
+PolicyWidget(
+  role: currentUserRole,
+  content: "PremiumContent",
+  child: PremiumContentWidget(),
+  fallback: UpgradePromptWidget(),
+)
+```
+
+## 🔧 Advanced Integration
+
+### 1. State Management Integration
+
+```dart
+// With Provider
+class UserProvider extends ChangeNotifier {
+  String _currentRole = 'guest';
+  final PolicyManager _policyManager;
+
+  UserProvider(this._policyManager);
+
+  String get currentRole => _currentRole;
+
+  void setRole(String role) {
+    _currentRole = role;
+    notifyListeners();
+  }
+
+  bool hasAccess(String content) {
+    return _policyManager.evaluateAccess(_currentRole, content);
+  }
+}
+```
+
+### 2. Navigation Integration
+
+```dart
+class PolicyAwareNavigator {
+  final PolicyManager policyManager;
+  final String currentRole;
+
+  PolicyAwareNavigator(this.policyManager, this.currentRole);
+
+  void navigateToContent(BuildContext context, String content, Widget page) {
+    if (policyManager.evaluateAccess(currentRole, content)) {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => page));
+    } else {
+      showAccessDeniedDialog(context);
+    }
+  }
+}
+```
+
+### 3. API Integration
+
+```dart
+class PolicyAwareApiClient {
+  final PolicyManager policyManager;
+  final String currentRole;
+
+  PolicyAwareApiClient(this.policyManager, this.currentRole);
+
+  Future<dynamic> getData(String endpoint) async {
+    // Check if user has access to this endpoint
+    if (!policyManager.evaluateAccess(currentRole, endpoint)) {
+      throw AccessDeniedException('Access denied to $endpoint');
+    }
+
+    // Proceed with API call
+    return await http.get(Uri.parse(endpoint));
+  }
+}
+```
+
+## 🧪 Testing Your Implementation
+
+### 1. Unit Tests
+
+```dart
+void main() {
+  group('Policy Manager Tests', () {
+    late PolicyManager policyManager;
+
+    setUp(() async {
+      policyManager = PolicyManager();
+      await policyManager.initialize({
+        "admin": ["LoginPage", "Dashboard"],
+        "user": ["LoginPage"],
+      });
+    });
+
+    test('admin should have access to Dashboard', () {
+      expect(policyManager.evaluateAccess("admin", "Dashboard"), isTrue);
+    });
+
+    test('user should not have access to Dashboard', () {
+      expect(policyManager.evaluateAccess("user", "Dashboard"), isFalse);
+    });
+  });
+}
+```
+
+### 2. Widget Tests
+
+```dart
+void main() {
+  testWidgets('PolicyWidget shows content for authorized role', (tester) async {
+    final policyManager = PolicyManager();
+    await policyManager.initialize({
+      "admin": ["Dashboard"],
+    });
+
+    await tester.pumpWidget(
+      PolicyProvider(
+        policyManager: policyManager,
+        child: MaterialApp(
+          home: PolicyWidget(
+            role: "admin",
+            content: "Dashboard",
+            child: Text('Dashboard Content'),
+            fallback: Text('Access Denied'),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Dashboard Content'), findsOneWidget);
+    expect(find.text('Access Denied'), findsNothing);
+  });
+}
+```
+
+## 🚀 Performance Optimization
+
+### 1. Policy Caching
+
+```dart
+class CachedPolicyManager {
+  final PolicyManager _policyManager;
+  final Map<String, bool> _accessCache = {};
+
+  CachedPolicyManager(this._policyManager);
+
+  bool evaluateAccess(String role, String content) {
+    final cacheKey = '${role}_$content';
+
+    if (_accessCache.containsKey(cacheKey)) {
+      return _accessCache[cacheKey]!;
+    }
+
+    final result = _policyManager.evaluateAccess(role, content);
+    _accessCache[cacheKey] = result;
+
+    return result;
+  }
+}
+```
+
+### 2. Lazy Loading
+
+```dart
+class LazyPolicyWidget extends StatefulWidget {
+  final String role;
+  final String content;
+  final Widget Function() childBuilder;
+  final Widget fallback;
+
+  @override
+  _LazyPolicyWidgetState createState() => _LazyPolicyWidgetState();
+}
+
+class _LazyPolicyWidgetState extends State<LazyPolicyWidget> {
+  bool _hasAccess = false;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAccess();
+  }
+
+  Future<void> _checkAccess() async {
+    // Simulate async policy check
+    await Future.delayed(Duration(milliseconds: 100));
+    final hasAccess = PolicyManager.of(context).evaluateAccess(widget.role, widget.content);
+
+    setState(() {
+      _hasAccess = hasAccess;
+      _isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return CircularProgressIndicator();
+    }
+
+    return _hasAccess ? widget.childBuilder() : widget.fallback;
+  }
+}
+```
+
+## 🔄 Community & Support
+
+### 1. Get Help
+
+- **GitHub Issues**: Report bugs and request features
+- **Documentation**: Comprehensive guides and examples
+- **Community**: Join discussions and share experiences
+
+### 2. Contribute
+
+- **Code Contributions**: Submit pull requests
+- **Documentation**: Help improve the docs
+- **Examples**: Share your use cases and implementations
+
+### 3. Stay Updated
+
+- **Releases**: Follow new releases and features
+- **Blog**: Read about best practices and tips
+- **Newsletter**: Get updates delivered to your inbox
+
+## 📈 Production Checklist
+
+Before deploying to production:
+
+- [ ] **Policy Validation**: Ensure all policies are properly validated
+- [ ] **Error Handling**: Implement comprehensive error handling
+- [ ] **Performance Testing**: Test with realistic data volumes
+- [ ] **Security Review**: Review security implications
+- [ ] **Monitoring**: Set up monitoring and alerting
+- [ ] **Backup Strategy**: Plan for policy data backup
+- [ ] **Rollback Plan**: Prepare for policy rollbacks if needed
+
+## 🎯 What's Next?
+
+Choose your path:
+
+- **Build Something**: Start integrating into your app
+- **Learn More**: Dive deeper into the documentation
+- **Contribute**: Help improve the project
+- **Share**: Tell others about your experience
+
+The Flutter Policy Engine is designed to grow with your needs. Start simple and add complexity as your application evolves.
+
+Happy coding! 🚀
