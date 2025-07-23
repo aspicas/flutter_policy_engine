@@ -1,0 +1,51 @@
+{
+  "name": "Flutter Policy Engine",
+  "description": "A comprehensive policy management and access control system for Flutter applications",
+  "sidebar": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        {
+          "title": "Introduction",
+          "href": "/",
+          "icon": "rocket"
+        },
+        {
+          "title": "Quick Start",
+          "href": "/quick-start",
+          "icon": "play"
+        },
+        {
+          "title": "Installation",
+          "href": "/installation",
+          "icon": "download"
+        }
+      ]
+    },
+    {
+      "group": "Core Concepts",
+      "pages": [
+        {
+          "title": "Policy Management",
+          "href": "/core-concepts/policy-management",
+          "icon": "shield"
+        }
+      ]
+    },
+    {
+      "group": "Examples",
+      "pages": [
+        {
+          "title": "Basic Policy Demo",
+          "href": "/examples/basic-policy-demo",
+          "icon": "code"
+        },
+        {
+          "title": "Role Management Demo",
+          "href": "/examples/role-management-demo",
+          "icon": "settings"
+        }
+      ]
+    }
+  ]
+}

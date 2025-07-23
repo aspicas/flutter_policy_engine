@@ -1,0 +1,111 @@
+---
+title: Flutter Policy Engine
+description: A comprehensive policy management and access control system for Flutter applications
+---
+
+# Flutter Policy Engine
+
+A powerful and flexible policy management system designed specifically for Flutter applications. The Flutter Policy Engine provides comprehensive role-based access control (RBAC) capabilities with an intuitive API and seamless integration with Flutter widgets.
+
+## 🚀 Key Features
+
+- **Role-Based Access Control**: Define roles with specific permissions and content access
+- **Dynamic Policy Management**: Add, update, and remove roles at runtime
+- **Widget Integration**: Built-in `PolicyWidget` for easy UI integration
+- **Memory Storage**: Efficient in-memory policy storage with extensible architecture
+- **Error Handling**: Comprehensive exception handling and validation
+- **Type Safety**: Full Dart type safety with null safety support
+
+## 🏗️ Architecture Overview
+
+The Flutter Policy Engine is built with a modular architecture that separates concerns and promotes maintainability:
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   PolicyWidget  │    │  PolicyProvider  │    │ PolicyManager   │
+│   (UI Layer)    │◄──►│  (Context)       │◄──►│  (Core Logic)   │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                                                         │
+                                                         ▼
+                                              ┌──────────────────┐
+                                              │ Policy Storage   │
+                                              │ (Memory/Extensible)│
+                                              └──────────────────┘
+```
+
+## 📦 Core Components
+
+### PolicyManager
+
+The central orchestrator that handles policy initialization, role management, and access evaluation.
+
+### PolicyProvider
+
+A Flutter widget that provides policy context to the widget tree, enabling child widgets to access policy information.
+
+### PolicyWidget
+
+A conditional widget that renders content based on the current user's role and permissions.
+
+### Role Model
+
+A data structure representing a role with its associated permissions and allowed content.
+
+## 🎯 Quick Example
+
+```dart
+// Initialize the policy manager
+final policyManager = PolicyManager();
+await policyManager.initialize({
+  "admin": ["LoginPage", "Dashboard", "UserManagement", "Settings"],
+  "user": ["LoginPage", "Dashboard"],
+  "guest": ["LoginPage"]
+});
+
+// Wrap your app with PolicyProvider
+PolicyProvider(
+  policyManager: policyManager,
+  child: MaterialApp(
+    home: MyHomePage(),
+  ),
+);
+
+// Use PolicyWidget for conditional rendering
+PolicyWidget(
+  role: "admin",
+  content: "UserManagement",
+  child: UserManagementPage(),
+  fallback: AccessDeniedWidget(),
+)
+```
+
+## 🔧 Getting Started
+
+1. **Installation**: Add the package to your `pubspec.yaml`
+2. **Quick Start**: Follow the basic setup guide
+3. **Examples**: Explore the interactive demos
+4. **API Reference**: Dive into the detailed API documentation
+
+## 📚 Documentation Sections
+
+- **[Quick Start](/quick-start)**: Get up and running in minutes
+- **[Core Concepts](/core-concepts/policy-management)**: Understand the fundamental concepts
+- **[Examples](/examples/basic-policy-demo)**: Interactive examples and demos
+- **[API Reference](/api/policy-manager)**: Complete API documentation
+- **[Advanced Topics](/advanced/best-practices)**: Best practices and advanced usage
+
+## 🎮 Interactive Demos
+
+The Flutter Policy Engine includes comprehensive example applications that demonstrate:
+
+- **Basic Policy Demo**: Simple role-based access control
+- **Role Management Demo**: Dynamic role creation and management
+- **Interactive Testing**: Real-time policy testing and validation
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](https://github.com/your-repo/flutter_policy_engine/blob/main/CONTRIBUTING.md) for details.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/your-repo/flutter_policy_engine/blob/main/LICENSE) file for details.
