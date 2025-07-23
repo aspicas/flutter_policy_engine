@@ -1,26 +1,26 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_policy_engine/src/core/role_evaluator.dart';
-import 'package:flutter_policy_engine/src/models/policy.dart';
+import 'package:flutter_policy_engine/src/models/role.dart';
 
 void main() {
   group('RoleEvaluator', () {
-    late Map<String, Policy> policies;
+    late Map<String, Role> policies;
     late RoleEvaluator evaluator;
 
     setUp(() {
       policies = {
-        'admin': const Policy(
-          roleName: 'admin',
+        'admin': const Role(
+          name: 'admin',
           allowedContent: ['read', 'write', 'delete'],
           metadata: {'level': 'high'},
         ),
-        'user': const Policy(
-          roleName: 'user',
+        'user': const Role(
+          name: 'user',
           allowedContent: ['read'],
           metadata: {'level': 'normal'},
         ),
-        'guest': const Policy(
-          roleName: 'guest',
+        'guest': const Role(
+          name: 'guest',
           allowedContent: [],
           metadata: {'level': 'low'},
         ),
@@ -85,8 +85,8 @@ void main() {
       });
 
       test('should handle duplicate content in allowed list', () {
-        const duplicatePolicy = Policy(
-          roleName: 'duplicate_role',
+        const duplicatePolicy = Role(
+          name: 'duplicate_role',
           allowedContent: ['read', 'read', 'write'],
         );
         const duplicateEvaluator =
@@ -99,8 +99,8 @@ void main() {
       });
 
       test('should handle special characters in content', () {
-        const specialPolicy = Policy(
-          roleName: 'special_role',
+        const specialPolicy = Role(
+          name: 'special_role',
           allowedContent: ['read@domain', 'write-file', 'delete_user'],
         );
         const specialEvaluator = RoleEvaluator({'special_role': specialPolicy});
@@ -114,8 +114,8 @@ void main() {
       });
 
       test('should handle whitespace in content', () {
-        const whitespacePolicy = Policy(
-          roleName: 'whitespace_role',
+        const whitespacePolicy = Role(
+          name: 'whitespace_role',
           allowedContent: ['read file', 'write document', 'delete record'],
         );
         const whitespaceEvaluator =
@@ -136,8 +136,8 @@ void main() {
     group('Edge cases', () {
       test('should handle very long content strings', () {
         final longContent = 'a' * 10000;
-        final longPolicy = Policy(
-          roleName: 'long_role',
+        final longPolicy = Role(
+          name: 'long_role',
           allowedContent: [longContent],
         );
         final longEvaluator = RoleEvaluator({'long_role': longPolicy});
@@ -149,8 +149,8 @@ void main() {
 
       test('should handle very long role names', () {
         final longRoleName = 'a' * 1000;
-        final longRolePolicy = Policy(
-          roleName: longRoleName,
+        final longRolePolicy = Role(
+          name: longRoleName,
           allowedContent: const ['read'],
         );
         final longRoleEvaluator = RoleEvaluator({longRoleName: longRolePolicy});
@@ -161,8 +161,8 @@ void main() {
 
       test('should handle large number of allowed content items', () {
         final largeContentList = List.generate(1000, (i) => 'content_$i');
-        final largePolicy = Policy(
-          roleName: 'large_role',
+        final largePolicy = Role(
+          name: 'large_role',
           allowedContent: largeContentList,
         );
         final largeEvaluator = RoleEvaluator({'large_role': largePolicy});
@@ -174,8 +174,8 @@ void main() {
       });
 
       test('should handle unicode characters in content', () {
-        const unicodePolicy = Policy(
-          roleName: 'unicode_role',
+        const unicodePolicy = Role(
+          name: 'unicode_role',
           allowedContent: ['café', 'naïve', 'résumé', 'über'],
         );
         const unicodeEvaluator = RoleEvaluator({'unicode_role': unicodePolicy});
@@ -188,8 +188,8 @@ void main() {
       });
 
       test('should handle numbers as content', () {
-        const numberPolicy = Policy(
-          roleName: 'number_role',
+        const numberPolicy = Role(
+          name: 'number_role',
           allowedContent: ['123', '456', '789'],
         );
         const numberEvaluator = RoleEvaluator({'number_role': numberPolicy});
@@ -201,8 +201,8 @@ void main() {
       });
 
       test('should handle mixed content types', () {
-        const mixedPolicy = Policy(
-          roleName: 'mixed_role',
+        const mixedPolicy = Role(
+          name: 'mixed_role',
           allowedContent: ['read', '123', 'café', 'read@domain', ''],
         );
         const mixedEvaluator = RoleEvaluator({'mixed_role': mixedPolicy});
@@ -231,10 +231,10 @@ void main() {
       });
 
       test('should handle evaluation with large policy set', () {
-        final largePolicies = <String, Policy>{};
+        final largePolicies = <String, Role>{};
         for (int i = 0; i < 1000; i++) {
-          largePolicies['role_$i'] = Policy(
-            roleName: 'role_$i',
+          largePolicies['role_$i'] = Role(
+            name: 'role_$i',
             allowedContent: const ['read', 'write'],
           );
         }
@@ -256,8 +256,8 @@ void main() {
     group('Integration scenarios', () {
       test('should handle typical RBAC scenario', () {
         final rbacPolicies = {
-          'super_admin': const Policy(
-            roleName: 'super_admin',
+          'super_admin': const Role(
+            name: 'super_admin',
             allowedContent: [
               'read',
               'write',
@@ -266,20 +266,20 @@ void main() {
               'manage_users'
             ],
           ),
-          'admin': const Policy(
-            roleName: 'admin',
+          'admin': const Role(
+            name: 'admin',
             allowedContent: ['read', 'write', 'delete'],
           ),
-          'moderator': const Policy(
-            roleName: 'moderator',
+          'moderator': const Role(
+            name: 'moderator',
             allowedContent: ['read', 'write'],
           ),
-          'user': const Policy(
-            roleName: 'user',
+          'user': const Role(
+            name: 'user',
             allowedContent: ['read'],
           ),
-          'guest': const Policy(
-            roleName: 'guest',
+          'guest': const Role(
+            name: 'guest',
             allowedContent: [],
           ),
         };
@@ -305,8 +305,8 @@ void main() {
 
       test('should handle file system permissions scenario', () {
         final filePolicies = {
-          'root': const Policy(
-            roleName: 'root',
+          'root': const Role(
+            name: 'root',
             allowedContent: [
               'read',
               'write',
@@ -316,16 +316,16 @@ void main() {
               'chown'
             ],
           ),
-          'owner': const Policy(
-            roleName: 'owner',
+          'owner': const Role(
+            name: 'owner',
             allowedContent: ['read', 'write', 'delete', 'chmod'],
           ),
-          'group': const Policy(
-            roleName: 'group',
+          'group': const Role(
+            name: 'group',
             allowedContent: ['read', 'write'],
           ),
-          'other': const Policy(
-            roleName: 'other',
+          'other': const Role(
+            name: 'other',
             allowedContent: ['read'],
           ),
         };

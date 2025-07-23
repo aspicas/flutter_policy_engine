@@ -1,75 +1,75 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_policy_engine/src/models/policy.dart';
+import 'package:flutter_policy_engine/src/models/role.dart';
 
 void main() {
-  group('Policy', () {
+  group('Role', () {
     group('Constructor', () {
       test('should create instance with required parameters', () {
-        const policy = Policy(
-          roleName: 'admin',
+        const role = Role(
+          name: 'admin',
           allowedContent: ['read', 'write'],
         );
 
-        expect(policy.roleName, equals('admin'));
-        expect(policy.allowedContent, equals(['read', 'write']));
-        expect(policy.metadata, equals({}));
+        expect(role.name, equals('admin'));
+        expect(role.allowedContent, equals(['read', 'write']));
+        expect(role.metadata, equals({}));
       });
 
       test('should create instance with all parameters', () {
         final metadata = {'level': 'high', 'department': 'IT'};
-        final policy = Policy(
-          roleName: 'admin',
+        final policy = Role(
+          name: 'admin',
           allowedContent: const ['read', 'write', 'delete'],
           metadata: metadata,
         );
 
-        expect(policy.roleName, equals('admin'));
+        expect(policy.name, equals('admin'));
         expect(policy.allowedContent, equals(['read', 'write', 'delete']));
         expect(policy.metadata, equals(metadata));
       });
 
       test('should create immutable instance', () {
-        const policy = Policy(
-          roleName: 'admin',
+        const policy = Role(
+          name: 'admin',
           allowedContent: ['read'],
         );
 
-        expect(policy, isA<Policy>());
+        expect(policy, isA<Role>());
         // Verify it's const-constructible
-        const policyConst = Policy(
-          roleName: 'admin',
+        const policyConst = Role(
+          name: 'admin',
           allowedContent: ['read'],
         );
-        expect(policyConst, isA<Policy>());
+        expect(policyConst, isA<Role>());
       });
 
       test('should handle empty allowed content', () {
-        const policy = Policy(
-          roleName: 'guest',
+        const policy = Role(
+          name: 'guest',
           allowedContent: [],
         );
 
-        expect(policy.roleName, equals('guest'));
+        expect(policy.name, equals('guest'));
         expect(policy.allowedContent, isEmpty);
       });
 
       test('should handle empty role name', () {
-        const policy = Policy(
-          roleName: '',
+        const policy = Role(
+          name: '',
           allowedContent: ['read'],
         );
 
-        expect(policy.roleName, equals(''));
+        expect(policy.name, equals(''));
         expect(policy.allowedContent, equals(['read']));
       });
     });
 
     group('isContentAllowed', () {
-      late Policy policy;
+      late Role policy;
 
       setUp(() {
-        policy = const Policy(
-          roleName: 'admin',
+        policy = const Role(
+          name: 'admin',
           allowedContent: ['read', 'write', 'delete'],
         );
       });
@@ -97,8 +97,8 @@ void main() {
       });
 
       test('should handle policy with empty allowed content', () {
-        const emptyPolicy = Policy(
-          roleName: 'guest',
+        const emptyPolicy = Role(
+          name: 'guest',
           allowedContent: [],
         );
 
@@ -108,8 +108,8 @@ void main() {
       });
 
       test('should handle duplicate content in allowed list', () {
-        const duplicatePolicy = Policy(
-          roleName: 'duplicate_role',
+        const duplicatePolicy = Role(
+          name: 'duplicate_role',
           allowedContent: ['read', 'read', 'write'],
         );
 
@@ -119,8 +119,8 @@ void main() {
       });
 
       test('should handle special characters in content', () {
-        const specialPolicy = Policy(
-          roleName: 'special_role',
+        const specialPolicy = Role(
+          name: 'special_role',
           allowedContent: ['read@domain', 'write-file', 'delete_user'],
         );
 
@@ -131,8 +131,8 @@ void main() {
       });
 
       test('should handle whitespace in content', () {
-        const whitespacePolicy = Policy(
-          roleName: 'whitespace_role',
+        const whitespacePolicy = Role(
+          name: 'whitespace_role',
           allowedContent: ['read file', 'write document', 'delete record'],
         );
 
@@ -144,11 +144,11 @@ void main() {
     });
 
     group('copyWith', () {
-      late Policy originalPolicy;
+      late Role originalPolicy;
 
       setUp(() {
-        originalPolicy = const Policy(
-          roleName: 'admin',
+        originalPolicy = const Role(
+          name: 'admin',
           allowedContent: ['read', 'write'],
           metadata: {'level': 'high'},
         );
@@ -158,16 +158,16 @@ void main() {
           () {
         final copy = originalPolicy.copyWith();
 
-        expect(copy.roleName, equals(originalPolicy.roleName));
+        expect(copy.name, equals(originalPolicy.name));
         expect(copy.allowedContent, equals(originalPolicy.allowedContent));
         expect(copy.metadata, equals(originalPolicy.metadata));
         expect(copy, isNot(same(originalPolicy)));
       });
 
       test('should create copy with updated role name', () {
-        final copy = originalPolicy.copyWith(roleName: 'super_admin');
+        final copy = originalPolicy.copyWith(name: 'super_admin');
 
-        expect(copy.roleName, equals('super_admin'));
+        expect(copy.name, equals('super_admin'));
         expect(copy.allowedContent, equals(originalPolicy.allowedContent));
         expect(copy.metadata, equals(originalPolicy.metadata));
       });
@@ -176,7 +176,7 @@ void main() {
         final newContent = ['read', 'write', 'delete'];
         final copy = originalPolicy.copyWith(allowedContent: newContent);
 
-        expect(copy.roleName, equals(originalPolicy.roleName));
+        expect(copy.name, equals(originalPolicy.name));
         expect(copy.allowedContent, equals(newContent));
         expect(copy.metadata, equals(originalPolicy.metadata));
       });
@@ -185,31 +185,31 @@ void main() {
         final newMetadata = {'level': 'low', 'department': 'IT'};
         final copy = originalPolicy.copyWith(metadata: newMetadata);
 
-        expect(copy.roleName, equals(originalPolicy.roleName));
+        expect(copy.name, equals(originalPolicy.name));
         expect(copy.allowedContent, equals(originalPolicy.allowedContent));
         expect(copy.metadata, equals(newMetadata));
       });
 
       test('should create copy with multiple updated fields', () {
         final copy = originalPolicy.copyWith(
-          roleName: 'user',
+          name: 'user',
           allowedContent: ['read'],
           metadata: {'level': 'normal'},
         );
 
-        expect(copy.roleName, equals('user'));
+        expect(copy.name, equals('user'));
         expect(copy.allowedContent, equals(['read']));
         expect(copy.metadata, equals({'level': 'normal'}));
       });
 
       test('should handle empty values in copyWith', () {
         final copy = originalPolicy.copyWith(
-          roleName: '',
+          name: '',
           allowedContent: [],
           metadata: {},
         );
 
-        expect(copy.roleName, equals(''));
+        expect(copy.name, equals(''));
         expect(copy.allowedContent, isEmpty);
         expect(copy.metadata, isEmpty);
       });
@@ -217,8 +217,8 @@ void main() {
 
     group('Equality', () {
       test('should be equal to itself', () {
-        const policy = Policy(
-          roleName: 'admin',
+        const policy = Role(
+          name: 'admin',
           allowedContent: ['read', 'write'],
         );
 
@@ -227,13 +227,13 @@ void main() {
       });
 
       test('should be equal to policy with same values', () {
-        const policy1 = Policy(
-          roleName: 'admin',
+        const policy1 = Role(
+          name: 'admin',
           allowedContent: ['read', 'write'],
           metadata: {'level': 'high'},
         );
-        const policy2 = Policy(
-          roleName: 'admin',
+        const policy2 = Role(
+          name: 'admin',
           allowedContent: ['read', 'write'],
           metadata: {'level': 'high'},
         );
@@ -243,12 +243,12 @@ void main() {
       });
 
       test('should not be equal to policy with different role name', () {
-        const policy1 = Policy(
-          roleName: 'admin',
+        const policy1 = Role(
+          name: 'admin',
           allowedContent: ['read', 'write'],
         );
-        const policy2 = Policy(
-          roleName: 'user',
+        const policy2 = Role(
+          name: 'user',
           allowedContent: ['read', 'write'],
         );
 
@@ -257,12 +257,12 @@ void main() {
       });
 
       test('should not be equal to policy with different allowed content', () {
-        const policy1 = Policy(
-          roleName: 'admin',
+        const policy1 = Role(
+          name: 'admin',
           allowedContent: ['read', 'write'],
         );
-        const policy2 = Policy(
-          roleName: 'admin',
+        const policy2 = Role(
+          name: 'admin',
           allowedContent: ['read', 'delete'],
         );
 
@@ -271,12 +271,12 @@ void main() {
       });
 
       test('should be equal regardless of content order', () {
-        const policy1 = Policy(
-          roleName: 'admin',
+        const policy1 = Role(
+          name: 'admin',
           allowedContent: ['read', 'write'],
         );
-        const policy2 = Policy(
-          roleName: 'admin',
+        const policy2 = Role(
+          name: 'admin',
           allowedContent: ['write', 'read'],
         );
 
@@ -285,8 +285,8 @@ void main() {
       });
 
       test('should not be equal to different object types', () {
-        const policy = Policy(
-          roleName: 'admin',
+        const policy = Role(
+          name: 'admin',
           allowedContent: ['read'],
         );
 
@@ -296,13 +296,13 @@ void main() {
       });
 
       test('should not consider metadata in equality', () {
-        const policy1 = Policy(
-          roleName: 'admin',
+        const policy1 = Role(
+          name: 'admin',
           allowedContent: ['read', 'write'],
           metadata: {'level': 'high'},
         );
-        const policy2 = Policy(
-          roleName: 'admin',
+        const policy2 = Role(
+          name: 'admin',
           allowedContent: ['read', 'write'],
           metadata: {'level': 'low'},
         );
@@ -314,8 +314,8 @@ void main() {
 
     group('toString', () {
       test('should return meaningful string representation', () {
-        const policy = Policy(
-          roleName: 'admin',
+        const policy = Role(
+          name: 'admin',
           allowedContent: ['read', 'write'],
           metadata: {'level': 'high'},
         );
@@ -328,8 +328,8 @@ void main() {
       });
 
       test('should handle empty values in string representation', () {
-        const policy = Policy(
-          roleName: '',
+        const policy = Role(
+          name: '',
           allowedContent: [],
           metadata: {},
         );
@@ -343,8 +343,8 @@ void main() {
 
     group('JSON serialization', () {
       test('should serialize to JSON correctly', () {
-        const policy = Policy(
-          roleName: 'admin',
+        const policy = Role(
+          name: 'admin',
           allowedContent: ['read', 'write', 'delete'],
           metadata: {'level': 'high', 'department': 'IT'},
         );
@@ -364,9 +364,9 @@ void main() {
           'metadata': {'level': 'normal'},
         };
 
-        final policy = Policy.fromJson(json);
+        final policy = Role.fromJson(json);
 
-        expect(policy.roleName, equals('user'));
+        expect(policy.name, equals('user'));
         expect(policy.allowedContent, equals(['read']));
         expect(policy.metadata, equals({'level': 'normal'}));
       });
@@ -378,9 +378,9 @@ void main() {
           'metadata': {},
         };
 
-        final policy = Policy.fromJson(json);
+        final policy = Role.fromJson(json);
 
-        expect(policy.roleName, equals(''));
+        expect(policy.name, equals(''));
         expect(policy.allowedContent, isEmpty);
         expect(policy.metadata, isEmpty);
       });
@@ -391,22 +391,22 @@ void main() {
           'allowedContent': ['read', 'write'],
         };
 
-        final policy = Policy.fromJson(json);
+        final policy = Role.fromJson(json);
 
-        expect(policy.roleName, equals('admin'));
+        expect(policy.name, equals('admin'));
         expect(policy.allowedContent, equals(['read', 'write']));
         expect(policy.metadata, equals({}));
       });
 
       test('should round-trip through JSON correctly', () {
-        const originalPolicy = Policy(
-          roleName: 'admin',
+        const originalPolicy = Role(
+          name: 'admin',
           allowedContent: ['read', 'write', 'delete'],
           metadata: {'level': 'high', 'department': 'IT'},
         );
 
         final json = originalPolicy.toJson();
-        final deserializedPolicy = Policy.fromJson(json);
+        final deserializedPolicy = Role.fromJson(json);
 
         expect(deserializedPolicy, equals(originalPolicy));
       });
@@ -429,7 +429,7 @@ void main() {
           'metadata': complexMetadata,
         };
 
-        final policy = Policy.fromJson(json);
+        final policy = Role.fromJson(json);
 
         expect(policy.metadata, equals(complexMetadata));
         expect(
@@ -442,19 +442,19 @@ void main() {
     group('Edge cases', () {
       test('should handle very long role names', () {
         final longRoleName = 'a' * 1000;
-        final policy = Policy(
-          roleName: longRoleName,
+        final policy = Role(
+          name: longRoleName,
           allowedContent: const ['read'],
         );
 
-        expect(policy.roleName, equals(longRoleName));
+        expect(policy.name, equals(longRoleName));
         expect(policy.isContentAllowed('read'), isTrue);
       });
 
       test('should handle very long content items', () {
         final longContent = 'a' * 10000;
-        final policy = Policy(
-          roleName: 'admin',
+        final policy = Role(
+          name: 'admin',
           allowedContent: [longContent],
         );
 
@@ -464,8 +464,8 @@ void main() {
 
       test('should handle large number of allowed content items', () {
         final largeContentList = List.generate(1000, (i) => 'content_$i');
-        final policy = Policy(
-          roleName: 'admin',
+        final policy = Role(
+          name: 'admin',
           allowedContent: largeContentList,
         );
 
@@ -476,8 +476,8 @@ void main() {
       });
 
       test('should handle unicode characters', () {
-        const policy = Policy(
-          roleName: 'admin',
+        const policy = Role(
+          name: 'admin',
           allowedContent: ['café', 'naïve', 'résumé'],
         );
 
@@ -488,8 +488,8 @@ void main() {
       });
 
       test('should handle numbers as content', () {
-        const policy = Policy(
-          roleName: 'admin',
+        const policy = Role(
+          name: 'admin',
           allowedContent: ['123', '456', '789'],
         );
 
@@ -508,7 +508,7 @@ void main() {
           'metadata': null,
         };
 
-        expect(() => Policy.fromJson(json), throwsA(isA<ArgumentError>()));
+        expect(() => Role.fromJson(json), throwsA(isA<ArgumentError>()));
       });
 
       test('should handle missing required fields in JSON', () {
@@ -517,7 +517,7 @@ void main() {
           // missing allowedContent
         };
 
-        expect(() => Policy.fromJson(json), throwsA(isA<ArgumentError>()));
+        expect(() => Role.fromJson(json), throwsA(isA<ArgumentError>()));
       });
 
       test('should handle wrong types in JSON', () {
@@ -526,7 +526,7 @@ void main() {
           'allowedContent': ['read'],
         };
 
-        expect(() => Policy.fromJson(json), throwsA(isA<ArgumentError>()));
+        expect(() => Role.fromJson(json), throwsA(isA<ArgumentError>()));
       });
 
       test('should handle non-string items in allowedContent', () {
@@ -535,18 +535,18 @@ void main() {
           'allowedContent': ['read', 123, 'write'], // contains non-string
         };
 
-        expect(() => Policy.fromJson(json), throwsA(isA<ArgumentError>()));
+        expect(() => Role.fromJson(json), throwsA(isA<ArgumentError>()));
       });
     });
 
     group('hashCode', () {
       test('should generate consistent hash codes for equal policies', () {
-        const policy1 = Policy(
-          roleName: 'admin',
+        const policy1 = Role(
+          name: 'admin',
           allowedContent: ['read', 'write'],
         );
-        const policy2 = Policy(
-          roleName: 'admin',
+        const policy2 = Role(
+          name: 'admin',
           allowedContent: ['write', 'read'], // different order
         );
 
@@ -554,12 +554,12 @@ void main() {
       });
 
       test('should generate different hash codes for different policies', () {
-        const policy1 = Policy(
-          roleName: 'admin',
+        const policy1 = Role(
+          name: 'admin',
           allowedContent: ['read', 'write'],
         );
-        const policy2 = Policy(
-          roleName: 'user',
+        const policy2 = Role(
+          name: 'user',
           allowedContent: ['read', 'write'],
         );
 
@@ -567,8 +567,8 @@ void main() {
       });
 
       test('should handle empty allowedContent in hashCode', () {
-        const policy = Policy(
-          roleName: 'admin',
+        const policy = Role(
+          name: 'admin',
           allowedContent: [],
         );
 
@@ -578,8 +578,8 @@ void main() {
 
       test('should handle large allowedContent lists in hashCode', () {
         final largeContentList = List.generate(100, (i) => 'content_$i');
-        final policy = Policy(
-          roleName: 'admin',
+        final policy = Role(
+          name: 'admin',
           allowedContent: largeContentList,
         );
 

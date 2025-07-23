@@ -3,7 +3,7 @@ import 'package:flutter_policy_engine/src/core/interfaces/i_policy_evaluator.dar
 import 'package:flutter_policy_engine/src/core/interfaces/i_policy_storage.dart';
 import 'package:flutter_policy_engine/src/core/memory_policy_storage.dart';
 import 'package:flutter_policy_engine/src/core/role_evaluator.dart';
-import 'package:flutter_policy_engine/src/models/policy.dart';
+import 'package:flutter_policy_engine/src/models/role.dart';
 import 'package:flutter_policy_engine/src/utils/json_handler.dart';
 import 'package:flutter_policy_engine/src/utils/log_handler.dart';
 
@@ -40,7 +40,7 @@ class PolicyManager extends ChangeNotifier {
   IPolicyEvaluator? _evaluator;
 
   /// Internal cache of loaded policies, keyed by policy identifier.
-  Map<String, Policy> _policies = {};
+  Map<String, Role> _roles = {};
 
   /// Indicates whether the policy manager has been initialized with policy data.
   bool _isInitialized = false;
@@ -54,7 +54,7 @@ class PolicyManager extends ChangeNotifier {
   ///
   /// The returned map cannot be modified directly. Use [initialize] to update
   /// the policy collection.
-  Map<String, Policy> get policies => Map.unmodifiable(_policies);
+  Map<String, Role> get roles => Map.unmodifiable(_roles);
 
   /// Initializes the policy manager with policy data from JSON.
   ///
@@ -62,7 +62,7 @@ class PolicyManager extends ChangeNotifier {
   /// This method should be called before using any policy-related functionality.
   ///
   /// [jsonPolicies] should be a map where keys are policy identifiers and values
-  /// are JSON representations of [Policy] objects.
+  /// are JSON representations of [Role] objects.
   ///
   /// Throws:
   /// - [JsonParseException] if policy parsing fails completely
@@ -118,30 +118,30 @@ class PolicyManager extends ChangeNotifier {
         }
 
         // Create the policy and add to valid policies
-        final policy = Policy(
-          roleName: key,
+        final role = Role(
+          name: key,
           allowedContent: value.cast<String>(),
         );
-        validPolicies[key] = policy.toJson();
+        validPolicies[key] = role.toJson();
       }
 
-      _policies = JsonHandler.parseMap(
+      _roles = JsonHandler.parseMap(
         validPolicies,
-        (json) => Policy.fromJson(json),
+        (json) => Role.fromJson(json),
         context: 'policy_manager',
         allowPartialSuccess: true,
       );
 
       // Only create evaluator if we have at least some policies
-      if (_policies.isNotEmpty) {
-        _evaluator = RoleEvaluator(_policies);
-        await _storage.savePolicies(_policies);
+      if (_roles.isNotEmpty) {
+        _evaluator = RoleEvaluator(_roles);
+        await _storage.savePolicies(_roles);
         _isInitialized = true;
 
         LogHandler.info(
           'Policy manager initialized successfully',
           context: {
-            'loaded_policies': _policies.length,
+            'loaded_policies': _roles.length,
             'total_policies': jsonPolicies.length,
           },
           operation: 'policy_manager_initialized',

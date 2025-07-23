@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_policy_engine/src/core/policy_manager.dart';
 import 'package:flutter_policy_engine/src/core/interfaces/i_policy_evaluator.dart';
 import 'package:flutter_policy_engine/src/core/interfaces/i_policy_storage.dart';
-import 'package:flutter_policy_engine/src/models/policy.dart';
+import 'package:flutter_policy_engine/src/models/role.dart';
 import 'package:flutter_policy_engine/src/utils/json_handler.dart';
 import 'package:flutter_policy_engine/src/exceptions/json_parse_exception.dart';
 
@@ -65,11 +65,10 @@ class MockPolicyEvaluator implements IPolicyEvaluator {
   }
 }
 
-class ThrowingPolicy extends Policy {
-  const ThrowingPolicy(
-      {required super.roleName, required super.allowedContent});
+class ThrowingPolicy extends Role {
+  const ThrowingPolicy({required super.name, required super.allowedContent});
 
-  static Policy fromJson(Map<String, dynamic> json) {
+  static Role fromJson(Map<String, dynamic> json) {
     throw StateError('Forced error in fromJson');
   }
 }
@@ -95,7 +94,7 @@ void main() {
         final manager = PolicyManager();
         expect(manager, isA<PolicyManager>());
         expect(manager.isInitialized, isFalse);
-        expect(manager.policies, isEmpty);
+        expect(manager.roles, isEmpty);
       });
 
       test('should create instance with custom storage and evaluator', () {
@@ -105,7 +104,7 @@ void main() {
         );
         expect(manager, isA<PolicyManager>());
         expect(manager.isInitialized, isFalse);
-        expect(manager.policies, isEmpty);
+        expect(manager.roles, isEmpty);
       });
 
       test('should extend ChangeNotifier', () {
@@ -119,13 +118,13 @@ void main() {
       });
 
       test('should have empty policies by default', () {
-        expect(policyManager.policies, isEmpty);
+        expect(policyManager.roles, isEmpty);
       });
 
       test('should return unmodifiable policies map', () {
         expect(
-            () => policyManager.policies['test'] =
-                const Policy(roleName: 'test', allowedContent: ['read']),
+            () => policyManager.roles['test'] =
+                const Role(name: 'test', allowedContent: ['read']),
             throwsA(isA<UnsupportedError>()));
       });
     });
@@ -140,13 +139,13 @@ void main() {
         await policyManager.initialize(jsonPolicies);
 
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies.length, equals(2));
-        expect(policyManager.policies['admin'], isA<Policy>());
-        expect(policyManager.policies['user'], isA<Policy>());
-        expect(policyManager.policies['admin']!.allowedContent,
+        expect(policyManager.roles.length, equals(2));
+        expect(policyManager.roles['admin'], isA<Role>());
+        expect(policyManager.roles['user'], isA<Role>());
+        expect(policyManager.roles['admin']!.allowedContent,
             containsAll(['read', 'write', 'delete']));
-        expect(policyManager.policies['user']!.allowedContent,
-            containsAll(['read']));
+        expect(
+            policyManager.roles['user']!.allowedContent, containsAll(['read']));
       });
 
       test('should handle empty policies gracefully', () async {
@@ -155,7 +154,7 @@ void main() {
         await policyManager.initialize(jsonPolicies);
 
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies, isEmpty);
+        expect(policyManager.roles, isEmpty);
       });
 
       test('should handle single policy', () async {
@@ -166,9 +165,9 @@ void main() {
         await policyManager.initialize(jsonPolicies);
 
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies.length, equals(1));
-        expect(policyManager.policies['admin']!.roleName, equals('admin'));
-        expect(policyManager.policies['admin']!.allowedContent,
+        expect(policyManager.roles.length, equals(1));
+        expect(policyManager.roles['admin']!.name, equals('admin'));
+        expect(policyManager.roles['admin']!.allowedContent,
             containsAll(['read', 'write']));
       });
 
@@ -181,7 +180,7 @@ void main() {
         await policyManager.initialize(jsonPolicies);
 
         expect(mockStorage.storedPolicies.length, equals(1));
-        expect(mockStorage.storedPolicies['admin'], isA<Policy>());
+        expect(mockStorage.storedPolicies['admin'], isA<Role>());
       });
 
       test('should notify listeners after initialization', () async {
@@ -219,7 +218,7 @@ void main() {
 
         // Should initialize successfully but skip invalid policies
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies, isEmpty);
+        expect(policyManager.roles, isEmpty);
       });
 
       test('should handle null values in JSON data gracefully', () async {
@@ -231,7 +230,7 @@ void main() {
 
         // Should initialize successfully but skip null policies
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies, isEmpty);
+        expect(policyManager.roles, isEmpty);
       });
 
       test(
@@ -247,10 +246,10 @@ void main() {
 
         // Should still initialize with valid policies
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies.length, equals(2));
-        expect(policyManager.policies['admin'], isNotNull);
-        expect(policyManager.policies['guest'], isNotNull);
-        expect(policyManager.policies['user'], isNull);
+        expect(policyManager.roles.length, equals(2));
+        expect(policyManager.roles['admin'], isNotNull);
+        expect(policyManager.roles['guest'], isNotNull);
+        expect(policyManager.roles['user'], isNull);
       });
 
       test('should create RoleEvaluator when policies are available', () async {
@@ -273,20 +272,19 @@ void main() {
         await policyManager.initialize(jsonPolicies);
 
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies, isEmpty);
+        expect(policyManager.roles, isEmpty);
       });
 
       test('should handle exception in Policy.fromJson during initialization',
           () async {
         // Prepare a validPolicies map that will be passed to parseMap
         final validPolicies = {
-          'admin':
-              const Policy(roleName: 'admin', allowedContent: ['read', 'write'])
-                  .toJson(),
+          'admin': const Role(name: 'admin', allowedContent: ['read', 'write'])
+              .toJson(),
         };
 
         expect(
-          () => JsonHandler.parseMap<Policy>(
+          () => JsonHandler.parseMap<Role>(
             validPolicies,
             (json) => ThrowingPolicy.fromJson(json),
             allowPartialSuccess: false,
@@ -306,7 +304,7 @@ void main() {
         await policyManager.initialize(jsonPolicies);
 
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies.length, equals(1000));
+        expect(policyManager.roles.length, equals(1000));
       });
 
       test('should handle policies with empty allowed content', () async {
@@ -317,7 +315,7 @@ void main() {
         await policyManager.initialize(jsonPolicies);
 
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies['admin']!.allowedContent, isEmpty);
+        expect(policyManager.roles['admin']!.allowedContent, isEmpty);
       });
 
       test('should handle policies with duplicate content', () async {
@@ -328,7 +326,7 @@ void main() {
         await policyManager.initialize(jsonPolicies);
 
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies['admin']!.allowedContent,
+        expect(policyManager.roles['admin']!.allowedContent,
             containsAll(['read', 'write']));
       });
     });
@@ -362,7 +360,7 @@ void main() {
         await Future.wait(futures);
 
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies.length, equals(1));
+        expect(policyManager.roles.length, equals(1));
       });
 
       test('should handle policies with non-string content items', () async {
@@ -374,7 +372,7 @@ void main() {
 
         // Should initialize successfully but skip invalid policies
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies, isEmpty);
+        expect(policyManager.roles, isEmpty);
       });
 
       test('should handle policies with non-list values', () async {
@@ -386,7 +384,7 @@ void main() {
 
         // Should initialize successfully but skip invalid policies
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies, isEmpty);
+        expect(policyManager.roles, isEmpty);
       });
 
       test('should handle complete initialization failure gracefully',
@@ -401,7 +399,7 @@ void main() {
 
         // Should still mark as initialized even with no valid policies
         expect(policyManager.isInitialized, isTrue);
-        expect(policyManager.policies, isEmpty);
+        expect(policyManager.roles, isEmpty);
       });
 
       test('should handle hasAccess when not initialized', () {
