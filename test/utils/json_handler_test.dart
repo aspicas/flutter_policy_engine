@@ -2,6 +2,7 @@ import 'package:flutter_policy_engine/src/exceptions/json_parse_exception.dart';
 import 'package:flutter_policy_engine/src/exceptions/json_serialize_exception.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_policy_engine/src/utils/json_handler.dart';
+import 'dart:convert'; // Added for jsonEncode
 
 // Test data classes for JSON conversion testing
 class TestUser {
@@ -537,6 +538,317 @@ void main() {
         );
 
         expect(result, isNull);
+      });
+    });
+
+    group('parseJsonString', () {
+      test('should parse valid JSON string to map', () {
+        const jsonString =
+            '{"name": "John Doe", "age": 30, "hobbies": ["reading", "swimming"], "metadata": {"city": "New York"}}';
+
+        final result = JsonHandler.parseJsonString(jsonString);
+
+        expect(result, isA<Map<String, dynamic>>());
+        expect(result['name'], 'John Doe');
+        expect(result['age'], 30);
+        expect(result['hobbies'], ['reading', 'swimming']);
+        expect(result['metadata'], {'city': 'New York'});
+      });
+
+      test('should parse complex nested JSON string', () {
+        const jsonString = '''
+        {
+          "users": {
+            "user1": {
+              "name": "John Doe",
+              "age": 30,
+              "hobbies": ["reading", "swimming"],
+              "metadata": {"city": "New York", "country": "USA"}
+            },
+            "user2": {
+              "name": "Jane Smith",
+              "age": 25,
+              "hobbies": ["coding", "gaming"],
+              "metadata": {"city": "Los Angeles", "country": "USA"}
+            }
+          },
+          "settings": {
+            "theme": "dark",
+            "notifications": true,
+            "preferences": {
+              "language": "en",
+              "timezone": "UTC"
+            }
+          }
+        }
+        ''';
+
+        final result = JsonHandler.parseJsonString(jsonString);
+
+        expect(result, isA<Map<String, dynamic>>());
+        expect(result['users'], isA<Map<String, dynamic>>());
+        expect(result['settings'], isA<Map<String, dynamic>>());
+
+        final users = result['users'] as Map<String, dynamic>;
+        expect((users['user1'] as Map<String, dynamic>)['name'], 'John Doe');
+        expect((users['user2'] as Map<String, dynamic>)['name'], 'Jane Smith');
+
+        final settings = result['settings'] as Map<String, dynamic>;
+        expect(settings['theme'], 'dark');
+        expect(settings['notifications'], true);
+        expect(
+          (settings['preferences'] as Map<String, dynamic>)['language'],
+          'en',
+        );
+      });
+
+      test('should parse JSON string with empty object', () {
+        const jsonString = '{}';
+
+        final result = JsonHandler.parseJsonString(jsonString);
+
+        expect(result, isA<Map<String, dynamic>>());
+        expect(result, isEmpty);
+      });
+
+      test('should parse JSON string with primitive values', () {
+        const jsonString =
+            '{"string": "hello", "number": 42, "boolean": true, "null_value": null}';
+
+        final result = JsonHandler.parseJsonString(jsonString);
+
+        expect(result, isA<Map<String, dynamic>>());
+        expect(result['string'], 'hello');
+        expect(result['number'], 42);
+        expect(result['boolean'], true);
+        expect(result['null_value'], isNull);
+      });
+
+      test('should parse JSON string with arrays', () {
+        const jsonString =
+            '{"numbers": [1, 2, 3, 4, 5], "strings": ["a", "b", "c"], "mixed": [1, "two", true, null]}';
+
+        final result = JsonHandler.parseJsonString(jsonString);
+
+        expect(result, isA<Map<String, dynamic>>());
+        expect(result['numbers'], [1, 2, 3, 4, 5]);
+        expect(result['strings'], ['a', 'b', 'c']);
+        expect(result['mixed'], [1, 'two', true, null]);
+      });
+
+      test('should handle whitespace and formatting', () {
+        const jsonString = '''
+        {
+          "name": "John Doe",
+          "age": 30,
+          "hobbies": [
+            "reading",
+            "swimming"
+          ],
+          "metadata": {
+            "city": "New York"
+          }
+        }
+        ''';
+
+        final result = JsonHandler.parseJsonString(jsonString);
+
+        expect(result, isA<Map<String, dynamic>>());
+        expect(result['name'], 'John Doe');
+        expect(result['age'], 30);
+        expect(result['hobbies'], ['reading', 'swimming']);
+        expect(result['metadata'], {'city': 'New York'});
+      });
+
+      test('should handle JSON string with escaped characters', () {
+        const jsonString =
+            '{"message": "Hello\\nWorld", "path": "C:\\\\Users\\\\John", "quote": "He said \\"Hello\\""}';
+
+        final result = JsonHandler.parseJsonString(jsonString);
+
+        expect(result, isA<Map<String, dynamic>>());
+        expect(result['message'], 'Hello\nWorld');
+        expect(result['path'], 'C:\\Users\\John');
+        expect(result['quote'], 'He said "Hello"');
+      });
+
+      group('Error handling', () {
+        test('should throw JsonParseException for empty string', () {
+          expect(
+            () => JsonHandler.parseJsonString(''),
+            throwsA(isA<JsonParseException>()),
+          );
+        });
+
+        test('should throw JsonParseException for whitespace-only string', () {
+          expect(
+            () => JsonHandler.parseJsonString('   \n\t  '),
+            throwsA(isA<JsonParseException>()),
+          );
+        });
+
+        test('should throw JsonParseException for invalid JSON syntax', () {
+          expect(
+            () => JsonHandler.parseJsonString(
+                '{"name": "John", "age": 30,}'), // Trailing comma
+            throwsA(isA<JsonParseException>()),
+          );
+        });
+
+        test('should throw JsonParseException for malformed JSON', () {
+          expect(
+            () => JsonHandler.parseJsonString(
+                '{"name": "John", "age": 30'), // Missing closing brace
+            throwsA(isA<JsonParseException>()),
+          );
+        });
+
+        test('should throw JsonParseException for JSON array instead of object',
+            () {
+          expect(
+            () => JsonHandler.parseJsonString('[1, 2, 3, 4, 5]'),
+            throwsA(isA<JsonParseException>()),
+          );
+        });
+
+        test(
+            'should throw JsonParseException for JSON primitive instead of object',
+            () {
+          expect(
+            () => JsonHandler.parseJsonString('"hello world"'),
+            throwsA(isA<JsonParseException>()),
+          );
+        });
+
+        test(
+            'should throw JsonParseException for JSON number instead of object',
+            () {
+          expect(
+            () => JsonHandler.parseJsonString('42'),
+            throwsA(isA<JsonParseException>()),
+          );
+        });
+
+        test(
+            'should throw JsonParseException for JSON boolean instead of object',
+            () {
+          expect(
+            () => JsonHandler.parseJsonString('true'),
+            throwsA(isA<JsonParseException>()),
+          );
+        });
+
+        test('should throw JsonParseException for JSON null instead of object',
+            () {
+          expect(
+            () => JsonHandler.parseJsonString('null'),
+            throwsA(isA<JsonParseException>()),
+          );
+        });
+
+        test('should throw JsonParseException for non-JSON string', () {
+          expect(
+            () => JsonHandler.parseJsonString('This is not JSON'),
+            throwsA(isA<JsonParseException>()),
+          );
+        });
+
+        test('should include context in error handling', () {
+          try {
+            JsonHandler.parseJsonString(
+              'invalid json',
+              context: 'test_context',
+            );
+            fail('Expected JsonParseException to be thrown');
+          } catch (e) {
+            expect(e, isA<JsonParseException>());
+            // The context is logged but not included in the exception message
+            // This is expected behavior for logging vs exception messages
+          }
+        });
+      });
+
+      group('Integration with parseMap', () {
+        test('should handle round-trip: JSON string -> parseMap -> mapToJson',
+            () {
+          const jsonString = '''
+          {
+            "user1": {
+              "name": "John Doe",
+              "age": 30,
+              "hobbies": ["reading", "swimming"],
+              "metadata": {"city": "New York"}
+            },
+            "user2": {
+              "name": "Jane Smith",
+              "age": 25,
+              "hobbies": ["coding", "gaming"],
+              "metadata": {"city": "Los Angeles"}
+            }
+          }
+          ''';
+
+          // Parse JSON string to map
+          final jsonMap = JsonHandler.parseJsonString(jsonString);
+
+          // Parse map to typed objects
+          final users = JsonHandler.parseMap<TestUser>(
+            jsonMap,
+            (json) => TestUser.fromJson(json),
+          );
+
+          // Serialize back to JSON map
+          final serializedMap = JsonHandler.mapToJson<TestUser>(
+            users,
+            (user) => user.toJson(),
+          );
+
+          // Convert back to JSON string for comparison
+          final resultJsonString = jsonEncode(serializedMap);
+
+          expect(users, hasLength(2));
+          expect(users['user1']!.name, 'John Doe');
+          expect(users['user2']!.name, 'Jane Smith');
+          expect(serializedMap, hasLength(2));
+          expect(resultJsonString, contains('"name":"John Doe"'));
+          expect(resultJsonString, contains('"name":"Jane Smith"'));
+        });
+
+        test('should handle partial success with invalid items in JSON string',
+            () {
+          const jsonString = '''
+          {
+            "valid_user": {
+              "name": "John Doe",
+              "age": 30,
+              "hobbies": ["reading"],
+              "metadata": {}
+            },
+            "invalid_user": "not_a_user_object",
+            "another_valid_user": {
+              "name": "Jane Smith",
+              "age": 25,
+              "hobbies": ["coding"],
+              "metadata": {}
+            }
+          }
+          ''';
+
+          // Parse JSON string to map
+          final jsonMap = JsonHandler.parseJsonString(jsonString);
+
+          // Parse map to typed objects with partial success
+          final users = JsonHandler.parseMap<TestUser>(
+            jsonMap,
+            (json) => TestUser.fromJson(json),
+            allowPartialSuccess: true,
+          );
+
+          expect(users, hasLength(2));
+          expect(users['valid_user']!.name, 'John Doe');
+          expect(users['another_valid_user']!.name, 'Jane Smith');
+          expect(users.containsKey('invalid_user'), false);
+        });
       });
     });
 
