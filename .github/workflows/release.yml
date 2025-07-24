@@ -27,3 +27,28 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: npx semantic-release
+
+  publish-package:
+    name: Publish Package
+    runs-on: ubuntu-latest
+    needs: release-push
+    if: needs.check-commits.outputs.commits-validated == 'success'
+    outputs:
+      tests-passed: ${{ steps.run-tests.outputs.result }}
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🐦 Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.3'
+
+      - name: 📦 Install dependencies
+        run: flutter pub get
+
+      - name: 🚀 Publish to pub.dev
+        env:
+          PUB_DEV_PUBLISH_TOKEN: ${{ secrets.PUB_DEV_PUBLISH_TOKEN }}
+        run: |
+          echo "$PUB_DEV_PUBLISH_TOKEN" > ~/.pub-cache/credentials.json
+          flutter packages pub publish --force
