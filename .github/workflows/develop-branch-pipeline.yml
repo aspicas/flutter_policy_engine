@@ -3,34 +3,13 @@ name: 🚀 Main Branch Pipeline
 on:
   pull_request:
     branches:
-      - main
+      - develop
 
 jobs:
-  # Step 1: Validate merge source
-  validate-resource:
-    name: Validate merge source
-    runs-on: ubuntu-latest
-    outputs:
-      validated: ${{ steps.validate.outputs.result }}
-    steps:
-      - name: Check source branch
-        id: validate
-        run: |
-          if [ "${{ github.head_ref }}" != "develop" ]; then
-            echo "Error: Only develop branch can merge to main"
-            echo "result=failure" >> $GITHUB_OUTPUT
-            exit 1
-          else
-            echo "Validation passed - source branch is develop"
-            echo "result=success" >> $GITHUB_OUTPUT
-          fi
-
-  # Step 2: Validate commit messages
+  # Step 1: Validate commit messages
   check-commits:
     name: Validate Commit Messages
     runs-on: ubuntu-latest
-    needs: validate-resource
-    if: needs.validate-resource.outputs.validated == 'success'
     outputs:
       commits-validated: ${{ steps.validate-commits.outputs.result }}
     steps:
@@ -54,7 +33,7 @@ jobs:
           npx commitlint --from=$(git rev-list --max-parents=0 HEAD) --to=HEAD --verbose
           echo "result=success" >> $GITHUB_OUTPUT
 
-  # Step 3: Run Flutter tests
+  # Step 2: Run Flutter tests
   test:
     name: Flutter Tests & Coverage
     runs-on: ubuntu-latest
