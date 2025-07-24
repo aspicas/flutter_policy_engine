@@ -1,4 +1,4 @@
-name: 🚀 Main Branch Pipeline
+name: 🚀 Develop Branch Pipeline
 
 on:
   pull_request:
