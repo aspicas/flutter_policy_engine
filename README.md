@@ -165,6 +165,34 @@ genhtml coverage/lcov.info -o coverage/html
 open coverage/html/index.html
 ```
 
+### GitHub Actions Testing
+
+Test GitHub Actions workflows locally before pushing to GitHub:
+
+```bash
+# Install dependencies (first time only)
+./scripts/install_dependencies.sh
+
+# Test a specific workflow
+./scripts/test_github_actions.sh -w .github/workflows/check-commits.yml --dry-run
+
+# List available workflows
+./scripts/test_github_actions.sh --list-workflows
+
+# Test with verbose output
+./scripts/test_github_actions.sh -w .github/workflows/main-branch-pipeline.yml -v
+```
+
+**Features:**
+
+- 🐳 Docker-based local testing with `act`
+- 🔍 Workflow validation and syntax checking
+- 🧪 Dry-run mode for safe testing
+- 📋 Comprehensive workflow coverage
+- 🛠️ Automatic dependency management
+
+For detailed usage, see [GitHub Actions Testing Guide](scripts/README.md).
+
 ### Example App
 
 Explore the interactive example app:
