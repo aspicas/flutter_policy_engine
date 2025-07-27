@@ -49,7 +49,7 @@ class ExternalAssetHandler {
   ExternalAssetHandler({
     required String assetPath,
   }) : _assetPath = assetPath {
-    if (assetPath.isEmpty) {
+    if (assetPath.trim().isEmpty) {
       throw ArgumentError('Asset path cannot be empty', 'assetPath');
     }
   }
