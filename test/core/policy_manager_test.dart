@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_policy_engine/src/core/policy_manager.dart';
 import 'package:flutter_policy_engine/src/core/interfaces/i_policy_evaluator.dart';
@@ -788,8 +787,12 @@ void main() {
 
         // Check that the expected policy is present in storage
         expect(freshStorage.storedPolicies['admin'], isA<Role>());
-        expect(freshStorage.storedPolicies['admin']!.allowedContent,
-            containsAll(['read', 'write']));
+        expect(
+          (freshStorage.storedPolicies['admin'] as Role).allowedContent,
+          containsAll(
+            ['read', 'write'],
+          ),
+        );
 
         // Clean up mock message handler
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
