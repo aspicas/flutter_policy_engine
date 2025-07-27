@@ -4,6 +4,7 @@ import 'package:flutter_policy_engine/src/core/interfaces/i_policy_storage.dart'
 import 'package:flutter_policy_engine/src/core/memory_policy_storage.dart';
 import 'package:flutter_policy_engine/src/core/role_evaluator.dart';
 import 'package:flutter_policy_engine/src/models/role.dart';
+import 'package:flutter_policy_engine/src/utils/external_asset_handler.dart';
 import 'package:flutter_policy_engine/src/utils/json_handler.dart';
 import 'package:flutter_policy_engine/src/utils/log_handler.dart';
 
@@ -172,6 +173,95 @@ class PolicyManager extends ChangeNotifier {
 
       // Re-throw to allow caller to handle the error
       rethrow;
+    }
+  }
+
+  /// Initializes the policy manager with policy data from a JSON asset file.
+  ///
+  /// Loads and parses JSON policy data from the specified [assetPath] and
+  /// initializes the policy manager with the loaded policies. This method
+  /// provides a convenient way to load policies from external asset files
+  /// bundled with the Flutter application.
+  ///
+  /// ## Parameters
+  ///
+  /// * [assetPath] - The path to the JSON asset file relative to the assets
+  ///   directory (e.g., 'assets/policies/config.json'). Must be declared in
+  ///   the `pubspec.yaml` file under the `assets` section.
+  ///
+  /// ## Usage
+  ///
+  /// ```dart
+  /// final policyManager = PolicyManager();
+  ///
+  /// // Load policies from an asset file
+  /// await policyManager.initializeFromJsonAssets('assets/policies/user_roles.json');
+  ///
+  /// // Check if initialization was successful
+  /// if (policyManager.isInitialized) {
+  ///   print('Policy manager initialized successfully');
+  /// }
+  /// ```
+  ///
+  /// ## Asset File Format
+  ///
+  /// The JSON asset file should contain a map where keys are role identifiers
+  /// and values are JSON representations of [Role] objects:
+  ///
+  /// ```json
+  /// {
+  ///   "admin": {
+  ///     "name": "admin",
+  ///     "permissions": ["read", "write", "delete"],
+  ///     "content": ["all"]
+  ///   },
+  ///   "user": {
+  ///     "name": "user",
+  ///     "permissions": ["read"],
+  ///     "content": ["public", "user_content"]
+  ///   }
+  /// }
+  /// ```
+  ///
+  /// ## Error Handling
+  ///
+  /// This method handles errors gracefully by:
+  /// * Validating the asset path is not empty
+  /// * Catching and logging asset loading errors
+  /// * Catching and logging JSON parsing errors
+  /// * Catching and logging policy initialization errors
+  ///
+  /// If any error occurs during the process, it is logged using [LogHandler.error]
+  /// with detailed context information for debugging.
+  ///
+  /// ## Throws
+  ///
+  /// * [ArgumentError] - If [assetPath] is empty or null
+  ///
+  /// ## Dependencies
+  ///
+  /// This method depends on:
+  /// * [ExternalAssetHandler] - For loading and parsing the asset file
+  /// * [initialize] - For processing the loaded policy data
+  /// * [LogHandler] - For error logging and debugging
+  ///
+  Future<void> initializeFromJsonAssets(String assetPath) async {
+    if (assetPath.isEmpty) {
+      throw ArgumentError('Asset path cannot be empty');
+    }
+
+    try {
+      final assetHandler = ExternalAssetHandler(assetPath: assetPath);
+      final jsonPolicies = await assetHandler.loadAssets();
+      await initialize(jsonPolicies);
+    } catch (e, stackTrace) {
+      LogHandler.error(
+        'Failed to initialize policy manager from JSON assets',
+        error: e,
+        stackTrace: stackTrace,
+        context: {'asset_path': assetPath},
+        operation: 'policy_manager_initialize_from_json_assets_error',
+      );
     }
   }
 

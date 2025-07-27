@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_policy_engine/src/core/policy_manager.dart';
 import 'package:flutter_policy_engine/src/core/interfaces/i_policy_evaluator.dart';
@@ -444,6 +446,391 @@ void main() {
           () => policyManager.initialize(jsonPolicies),
           throwsA(isA<StateError>()),
         );
+      });
+    });
+
+    group('initializeFromJsonAssets', () {
+      setUpAll(() {
+        TestWidgetsFlutterBinding.ensureInitialized();
+      });
+
+      test('should initialize successfully with valid JSON asset', () async {
+        // Mock the rootBundle to return valid JSON
+        const validJson = '''
+        {
+          "admin": ["read", "write", "delete"],
+          "user": ["read"]
+        }
+        ''';
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', (ByteData? message) async {
+          return ByteData.view(
+              Uint8List.fromList(utf8.encode(validJson)).buffer);
+        });
+
+        await policyManager
+            .initializeFromJsonAssets('assets/policies/test.json');
+
+        expect(policyManager.isInitialized, isTrue);
+        expect(policyManager.roles.length, equals(2));
+        expect(policyManager.roles['admin'], isA<Role>());
+        expect(policyManager.roles['user'], isA<Role>());
+        expect(policyManager.roles['admin']!.allowedContent,
+            containsAll(['read', 'write', 'delete']));
+        expect(
+            policyManager.roles['user']!.allowedContent, containsAll(['read']));
+
+        // Clean up mock message handler
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', null);
+      });
+
+      test('should handle empty asset path', () async {
+        expect(
+          () => policyManager.initializeFromJsonAssets(''),
+          throwsA(isA<ArgumentError>()),
+        );
+      });
+
+      test('should handle asset not found gracefully', () async {
+        // Test with a non-existent asset path
+        await policyManager
+            .initializeFromJsonAssets('assets/policies/nonexistent.json');
+
+        // Should handle gracefully and initialize with empty policies
+        expect(policyManager.isInitialized, isTrue);
+        expect(policyManager.roles, isEmpty);
+      });
+
+      test('should handle invalid JSON in asset gracefully', () async {
+        // Mock the rootBundle to return invalid JSON
+        const invalidJson = 'invalid json content';
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', (ByteData? message) async {
+          return ByteData.view(
+              Uint8List.fromList(utf8.encode(invalidJson)).buffer);
+        });
+
+        await policyManager
+            .initializeFromJsonAssets('assets/policies/invalid.json');
+
+        // Should handle gracefully and initialize with empty policies
+        expect(policyManager.isInitialized, isTrue);
+        expect(policyManager.roles, isEmpty);
+
+        // Clean up mock message handler
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', null);
+      });
+
+      test('should handle malformed policy data in JSON asset', () async {
+        // Mock the rootBundle to return JSON with malformed policy data
+        const malformedJson = '''
+        {
+          "admin": "not_a_list",
+          "user": null,
+          "guest": ["read"]
+        }
+        ''';
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', (ByteData? message) async {
+          return ByteData.view(
+              Uint8List.fromList(utf8.encode(malformedJson)).buffer);
+        });
+
+        await policyManager
+            .initializeFromJsonAssets('assets/policies/malformed.json');
+
+        // Should initialize with only valid policies
+        expect(policyManager.isInitialized, isTrue);
+        expect(policyManager.roles.length, equals(1));
+        expect(policyManager.roles['guest'], isNotNull);
+        expect(policyManager.roles['admin'], isNull);
+        expect(policyManager.roles['user'], isNull);
+
+        // Clean up mock message handler
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', null);
+      });
+
+      test('should handle empty JSON object in asset', () async {
+        // Mock the rootBundle to return empty JSON object
+        const emptyJson = '{}';
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', (ByteData? message) async {
+          return ByteData.view(
+              Uint8List.fromList(utf8.encode(emptyJson)).buffer);
+        });
+
+        await policyManager
+            .initializeFromJsonAssets('assets/policies/empty.json');
+
+        expect(policyManager.isInitialized, isTrue);
+        expect(policyManager.roles, isEmpty);
+
+        // Clean up mock message handler
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', null);
+      });
+
+      test('should handle single policy in JSON asset', () async {
+        // Mock the rootBundle to return JSON with single policy
+        const singlePolicyJson = '''
+        {
+          "admin": ["read", "write"]
+        }
+        ''';
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', (ByteData? message) async {
+          return ByteData.view(
+              Uint8List.fromList(utf8.encode(singlePolicyJson)).buffer);
+        });
+
+        await policyManager
+            .initializeFromJsonAssets('assets/policies/single.json');
+
+        expect(policyManager.isInitialized, isTrue);
+        expect(policyManager.roles.length, equals(1));
+        expect(policyManager.roles['admin']!.name, equals('admin'));
+        expect(policyManager.roles['admin']!.allowedContent,
+            containsAll(['read', 'write']));
+
+        // Clean up mock message handler
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', null);
+      });
+
+      test('should handle large policy set in JSON asset', () async {
+        // Create a large JSON with many policies
+        final largeJson = <String, dynamic>{};
+        for (int i = 0; i < 100; i++) {
+          largeJson['role_$i'] = ['read', 'write'];
+        }
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', (ByteData? message) async {
+          return ByteData.view(
+              Uint8List.fromList(utf8.encode(jsonEncode(largeJson))).buffer);
+        });
+
+        await policyManager
+            .initializeFromJsonAssets('assets/policies/large.json');
+
+        expect(policyManager.isInitialized, isTrue);
+        expect(policyManager.roles.length, equals(100));
+
+        // Clean up mock message handler
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', null);
+      });
+
+      test('should handle policies with empty content arrays', () async {
+        // Mock the rootBundle to return JSON with empty content arrays
+        const emptyContentJson = '''
+        {
+          "admin": [],
+          "user": ["read"]
+        }
+        ''';
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', (ByteData? message) async {
+          return ByteData.view(
+              Uint8List.fromList(utf8.encode(emptyContentJson)).buffer);
+        });
+
+        await policyManager
+            .initializeFromJsonAssets('assets/policies/empty_content.json');
+
+        expect(policyManager.isInitialized, isTrue);
+        expect(policyManager.roles.length, equals(2));
+        expect(policyManager.roles['admin']!.allowedContent, isEmpty);
+        expect(
+            policyManager.roles['user']!.allowedContent, containsAll(['read']));
+
+        // Clean up mock message handler
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', null);
+      });
+
+      test('should handle policies with duplicate content items', () async {
+        // Mock the rootBundle to return JSON with duplicate content
+        const duplicateContentJson = '''
+        {
+          "admin": ["read", "read", "write", "write"]
+        }
+        ''';
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', (ByteData? message) async {
+          return ByteData.view(
+              Uint8List.fromList(utf8.encode(duplicateContentJson)).buffer);
+        });
+
+        await policyManager
+            .initializeFromJsonAssets('assets/policies/duplicate.json');
+
+        expect(policyManager.isInitialized, isTrue);
+        expect(policyManager.roles.length, equals(1));
+        expect(policyManager.roles['admin']!.allowedContent,
+            containsAll(['read', 'write']));
+
+        // Clean up mock message handler
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', null);
+      });
+
+      test('should handle platform exception during asset loading', () async {
+        // Test with an invalid asset path that will cause platform exception
+        await policyManager
+            .initializeFromJsonAssets('invalid/path/with/special/chars/\\/');
+
+        // Should handle gracefully and initialize with empty policies
+        expect(policyManager.isInitialized, isTrue);
+        expect(policyManager.roles, isEmpty);
+      });
+
+      test('should handle concurrent initialization from assets', () async {
+        // Mock the rootBundle to return valid JSON
+        const validJson = '''
+        {
+          "admin": ["read", "write"],
+          "user": ["read"]
+        }
+        ''';
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', (ByteData? message) async {
+          return ByteData.view(
+              Uint8List.fromList(utf8.encode(validJson)).buffer);
+        });
+
+        // Start multiple initialization calls
+        final futures = [
+          policyManager.initializeFromJsonAssets('assets/policies/test1.json'),
+          policyManager.initializeFromJsonAssets('assets/policies/test2.json'),
+          policyManager.initializeFromJsonAssets('assets/policies/test3.json'),
+        ];
+
+        await Future.wait(futures);
+
+        expect(policyManager.isInitialized, isTrue);
+        expect(policyManager.roles.length, equals(2));
+
+        // Clean up mock message handler
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', null);
+      });
+
+      test(
+          'should notify listeners after successful initialization from assets',
+          () async {
+        // Mock the rootBundle to return valid JSON
+        const validJson = '''
+        {
+          "admin": ["read", "write"]
+        }
+        ''';
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', (ByteData? message) async {
+          return ByteData.view(
+              Uint8List.fromList(utf8.encode(validJson)).buffer);
+        });
+
+        bool listenerCalled = false;
+        policyManager.addListener(() {
+          listenerCalled = true;
+        });
+
+        await policyManager
+            .initializeFromJsonAssets('assets/policies/test.json');
+
+        expect(listenerCalled, isTrue);
+        expect(policyManager.isInitialized, isTrue);
+
+        // Clean up mock message handler
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', null);
+      });
+
+      test(
+          'should save policies to storage after successful initialization from assets',
+          () async {
+        // Create a fresh policy manager and storage for this test
+        final freshStorage = MockPolicyStorage();
+        final freshEvaluator = MockPolicyEvaluator();
+        final freshPolicyManager = PolicyManager(
+          storage: freshStorage,
+          evaluator: freshEvaluator,
+        );
+
+        // Mock the rootBundle to return valid JSON
+        const validJson = '''
+        {
+          "admin": ["read", "write"]
+        }
+        ''';
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', (ByteData? message) async {
+          return ByteData.view(
+              Uint8List.fromList(utf8.encode(validJson)).buffer);
+        });
+
+        await freshPolicyManager
+            .initializeFromJsonAssets('assets/policies/test.json');
+
+        // Check that the expected policy is present in storage
+        expect(freshStorage.storedPolicies['admin'], isA<Role>());
+        expect(freshStorage.storedPolicies['admin']!.allowedContent,
+            containsAll(['read', 'write']));
+
+        // Clean up mock message handler
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', null);
+      });
+
+      test(
+          'should handle storage save errors during initialization from assets',
+          () async {
+        // Mock the rootBundle to return valid JSON
+        const validJson = '''
+        {
+          "admin": ["read", "write"]
+        }
+        ''';
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', (ByteData? message) async {
+          return ByteData.view(
+              Uint8List.fromList(utf8.encode(validJson)).buffer);
+        });
+
+        // Make storage throw on save
+        mockStorage.setShouldThrowOnSave(true);
+
+        // The method catches exceptions and doesn't rethrow them
+        await policyManager
+            .initializeFromJsonAssets('assets/policies/test.json');
+
+        // Should handle gracefully and not initialize due to storage error
+        expect(policyManager.isInitialized, isFalse);
+
+        // Clean up mock message handler
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', null);
+      });
+
+      tearDown(() {
+        // Clean up mock message handlers
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', null);
       });
     });
 
