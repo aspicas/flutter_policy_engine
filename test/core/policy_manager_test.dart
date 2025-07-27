@@ -457,8 +457,12 @@ void main() {
         // Mock the rootBundle to return valid JSON
         const validJson = '''
         {
-          "admin": ["read", "write", "delete"],
-          "user": ["read"]
+          "admin": {
+            "allowedContent": ["read", "write", "delete"]
+          },
+          "user": {
+            "allowedContent": ["read"]
+          }
         }
         ''';
 
@@ -471,6 +475,7 @@ void main() {
         await policyManager
             .initializeFromJsonAssets('assets/policies/test.json');
 
+        // The method should initialize successfully with valid JSON
         expect(policyManager.isInitialized, isTrue);
         expect(policyManager.roles.length, equals(2));
         expect(policyManager.roles['admin'], isA<Role>());
@@ -528,9 +533,16 @@ void main() {
         // Mock the rootBundle to return JSON with malformed policy data
         const malformedJson = '''
         {
-          "admin": "not_a_list",
+          "admin": {
+            "allowedContent": "not_a_list"
+          },
           "user": null,
-          "guest": ["read"]
+          "guest": {
+            "allowedContent": ["read"]
+          },
+          "invalid_role": {
+            "allowedContent": [123, "read"]
+          }
         }
         ''';
 
@@ -547,8 +559,11 @@ void main() {
         expect(policyManager.isInitialized, isTrue);
         expect(policyManager.roles.length, equals(1));
         expect(policyManager.roles['guest'], isNotNull);
+        expect(policyManager.roles['guest']!.name, equals('guest'));
+        expect(policyManager.roles['guest']!.allowedContent, contains('read'));
         expect(policyManager.roles['admin'], isNull);
         expect(policyManager.roles['user'], isNull);
+        expect(policyManager.roles['invalid_role'], isNull);
 
         // Clean up mock message handler
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -580,7 +595,9 @@ void main() {
         // Mock the rootBundle to return JSON with single policy
         const singlePolicyJson = '''
         {
-          "admin": ["read", "write"]
+          "admin": {
+            "allowedContent": ["read", "write"]
+          }
         }
         ''';
 
@@ -608,7 +625,9 @@ void main() {
         // Create a large JSON with many policies
         final largeJson = <String, dynamic>{};
         for (int i = 0; i < 100; i++) {
-          largeJson['role_$i'] = ['read', 'write'];
+          largeJson['role_$i'] = {
+            'allowedContent': ['read', 'write']
+          };
         }
 
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -632,8 +651,12 @@ void main() {
         // Mock the rootBundle to return JSON with empty content arrays
         const emptyContentJson = '''
         {
-          "admin": [],
-          "user": ["read"]
+          "admin": {
+            "allowedContent": []
+          },
+          "user": {
+            "allowedContent": ["read"]
+          }
         }
         ''';
 
@@ -661,7 +684,9 @@ void main() {
         // Mock the rootBundle to return JSON with duplicate content
         const duplicateContentJson = '''
         {
-          "admin": ["read", "read", "write", "write"]
+          "admin": {
+            "allowedContent": ["read", "read", "write", "write"]
+          }
         }
         ''';
 
@@ -698,8 +723,12 @@ void main() {
         // Mock the rootBundle to return valid JSON
         const validJson = '''
         {
-          "admin": ["read", "write"],
-          "user": ["read"]
+          "admin": {
+            "allowedContent": ["read", "write"]
+          },
+          "user": {
+            "allowedContent": ["read"]
+          }
         }
         ''';
 
@@ -732,7 +761,9 @@ void main() {
         // Mock the rootBundle to return valid JSON
         const validJson = '''
         {
-          "admin": ["read", "write"]
+          "admin": {
+            "allowedContent": ["read", "write"]
+          }
         }
         ''';
 
@@ -772,7 +803,9 @@ void main() {
         // Mock the rootBundle to return valid JSON
         const validJson = '''
         {
-          "admin": ["read", "write"]
+          "admin": {
+            "allowedContent": ["read", "write"]
+          }
         }
         ''';
 
@@ -786,6 +819,7 @@ void main() {
             .initializeFromJsonAssets('assets/policies/test.json');
 
         // Check that the expected policy is present in storage
+        expect(freshPolicyManager.isInitialized, isTrue);
         expect(freshStorage.storedPolicies['admin'], isA<Role>());
         expect(
           (freshStorage.storedPolicies['admin'] as Role).allowedContent,
@@ -805,7 +839,9 @@ void main() {
         // Mock the rootBundle to return valid JSON
         const validJson = '''
         {
-          "admin": ["read", "write"]
+          "admin": {
+            "allowedContent": ["read", "write"]
+          }
         }
         ''';
 

@@ -253,7 +253,113 @@ class PolicyManager extends ChangeNotifier {
     try {
       final assetHandler = ExternalAssetHandler(assetPath: assetPath);
       final jsonPolicies = await assetHandler.loadAssets();
-      await initialize(jsonPolicies);
+
+      try {
+        LogHandler.info(
+          'Initializing policy manager with assets',
+          context: {
+            'policy_count': jsonPolicies.length,
+            'policy_keys': jsonPolicies.keys.take(5).toList(),
+          },
+          operation: 'policy_manager_initialize',
+        );
+
+        // Create a map of valid policies, skipping invalid ones
+        final validPolicies = <String, Map<String, dynamic>>{};
+
+        for (final entry in jsonPolicies.entries) {
+          final key = entry.key;
+          final value = entry.value;
+
+          if (value == null) {
+            LogHandler.warning(
+              'Skipping null policy value',
+              context: {'role': key},
+              operation: 'policy_validation_skip',
+            );
+            continue;
+          }
+
+          if (value is! Map<String, dynamic>) {
+            LogHandler.warning(
+              'Skipping invalid policy value type',
+              context: {
+                'role': key,
+                'expected_type': 'Map<String, dynamic>',
+                'actual_type': value.runtimeType.toString(),
+              },
+              operation: 'policy_validation_skip',
+            );
+            continue;
+          }
+
+          // Add key as role name to value if not already present
+          if (!value.containsKey('roleName')) {
+            value['roleName'] = key;
+          }
+
+          try {
+            // Create the policy and add to valid policies
+            final role = Role.fromJson(value);
+            validPolicies[key] = role.toJson();
+          } catch (e) {
+            LogHandler.warning(
+              'Skipping policy with invalid structure',
+              context: {'role': key, 'error': e.toString()},
+              operation: 'policy_validation_skip',
+            );
+            continue;
+          }
+        }
+
+        _roles = JsonHandler.parseMap(
+          validPolicies,
+          (json) => Role.fromJson(json),
+          context: 'policy_manager',
+          allowPartialSuccess: true,
+        );
+
+        // Only create evaluator if we have at least some policies
+        if (_roles.isNotEmpty) {
+          _evaluator = RoleEvaluator(_roles);
+          await _storage.savePolicies(_roles);
+          _isInitialized = true;
+
+          LogHandler.info(
+            'Policy manager initialized successfully',
+            context: {
+              'loaded_policies': _roles.length,
+              'total_policies': jsonPolicies.length,
+            },
+            operation: 'policy_manager_initialized',
+          );
+        } else {
+          LogHandler.warning(
+            'Policy manager initialized with no valid policies',
+            context: {
+              'total_policies': jsonPolicies.length,
+            },
+            operation: 'policy_manager_empty',
+          );
+          // Still mark as initialized but with empty policies
+          _isInitialized = true;
+        }
+
+        notifyListeners();
+      } catch (e, stackTrace) {
+        LogHandler.error(
+          'Failed to initialize policy manager',
+          error: e,
+          stackTrace: stackTrace,
+          context: {
+            'policy_count': jsonPolicies.length,
+          },
+          operation: 'policy_manager_initialize_error',
+        );
+
+        // Re-throw to allow caller to handle the error
+        rethrow;
+      }
     } catch (e, stackTrace) {
       LogHandler.error(
         'Failed to initialize policy manager from JSON assets',
