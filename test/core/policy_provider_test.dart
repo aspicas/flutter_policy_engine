@@ -55,8 +55,8 @@ class TestConsumerWidget extends StatelessWidget {
           Builder(
             builder: (context) {
               try {
-                final policyManager = PolicyProvider.policyManagerOf(context);
-                return Text('manager_found: ${policyManager != null}');
+                final _ = PolicyProvider.policyManagerOf(context);
+                return const Text('manager_found: true');
               } catch (e) {
                 return Text('error: ${e.toString()}');
               }
@@ -388,7 +388,7 @@ void main() {
             PolicyProvider(
               policyManager: policyManager,
               child: const Column(
-                children: const [
+                children: [
                   TestConsumerWidget(),
                   TestConsumerWidget(),
                   RebuildTestWidget(),

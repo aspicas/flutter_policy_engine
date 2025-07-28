@@ -94,7 +94,7 @@ void main() {
       const message = 'Failed to load policy configuration';
 
       // Test with FormatException
-      final formatError = FormatException('Invalid format');
+      const formatError = FormatException('Invalid format');
       final exceptionWithFormatError = PolicySDKException(
         message,
         exception: formatError,
