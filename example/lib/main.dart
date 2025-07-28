@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_policy_engine_example/policy_engine_demo.dart';
 import 'package:flutter_policy_engine_example/role_management_demo.dart';
+import 'package:flutter_policy_engine_example/json_assets_demo.dart';
 
 void main() {
   runApp(const MyApp());
@@ -95,6 +96,24 @@ class HomeScreen extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.all(16),
                 backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const JsonAssetsDemo(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.file_copy),
+              label: const Text('JSON Assets Demo'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.all(16),
+                backgroundColor: Colors.teal,
                 foregroundColor: Colors.white,
               ),
             ),

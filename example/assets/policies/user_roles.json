@@ -1,0 +1,43 @@
+{
+  "admin": {
+    "allowedContent": [
+      "read",
+      "write",
+      "delete",
+      "manage_users",
+      "system_config",
+      "all",
+      "admin_panel",
+      "user_management",
+      "system_settings"
+    ]
+  },
+  "manager": {
+    "allowedContent": [
+      "read",
+      "write",
+      "manage_team",
+      "team_content",
+      "reports",
+      "analytics",
+      "public"
+    ]
+  },
+  "editor": {
+    "allowedContent": [
+      "read",
+      "write",
+      "publish",
+      "content_creation",
+      "drafts",
+      "published_content",
+      "public"
+    ]
+  },
+  "viewer": {
+    "allowedContent": ["read", "public", "published_content", "reports"]
+  },
+  "guest": {
+    "allowedContent": ["read", "public"]
+  }
+}
