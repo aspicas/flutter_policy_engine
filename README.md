@@ -10,12 +10,14 @@ A lightweight, extensible policy engine for Flutter applications. Define, manage
 
 - **🔐 Dual Access Control Models**: Support for both Role-Based (RBAC) and Attribute-Based (ABAC) access control
 - **🎯 Declarative Policy Definitions**: Define access rules using simple, readable configurations
+- **📁 JSON Asset Loading**: Load policies from external JSON files bundled with your app
 - **🏗️ Modular Architecture**: Extensible design with clear separation of concerns
 - **⚡ Lightweight & Fast**: Minimal overhead with efficient policy evaluation
 - **🔄 Real-time Updates**: Dynamic policy updates without app restarts
 - **🎨 Flutter-Native**: Built specifically for Flutter with widget integration
 - **📱 Easy Integration**: Simple setup with minimal boilerplate code
 - **🧪 Comprehensive Testing**: Full test coverage with examples
+- **🛡️ Robust Error Handling**: Structured exception handling with detailed context
 
 ## 🚀 Quick Start
 
@@ -25,7 +27,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  flutter_policy_engine: ^1.0.1
+  flutter_policy_engine: ^1.1.0
 ```
 
 Run the installation:
@@ -98,6 +100,34 @@ class HomePage extends StatelessWidget {
     );
   }
 }
+```
+
+### Loading Policies from JSON Assets
+
+You can also load policies from JSON files bundled with your app:
+
+```dart
+// Add to pubspec.yaml
+flutter:
+  assets:
+    - assets/policies/
+
+// Create assets/policies/user_roles.json
+{
+  "admin": {
+    "allowedContent": ["dashboard", "users", "settings", "reports"]
+  },
+  "manager": {
+    "allowedContent": ["dashboard", "users", "reports"]
+  },
+  "user": {
+    "allowedContent": ["dashboard"]
+  }
+}
+
+// Initialize from JSON asset
+final policyManager = PolicyManager();
+await policyManager.initializeFromJsonAssets('assets/policies/user_roles.json');
 ```
 
 ## 📚 Core Concepts
@@ -195,7 +225,7 @@ For detailed usage, see [GitHub Actions Testing Guide](scripts/README.md).
 
 ### Example App
 
-Explore the interactive example app:
+Explore the interactive example app with multiple demos:
 
 ```bash
 cd example
@@ -204,10 +234,23 @@ flutter run
 
 The example includes:
 
-- Basic policy demonstrations
-- Role management interface
+#### 🎯 Basic Policy Demo
+
+- Core policy evaluation demonstrations
+- Real-time access control testing
+- Widget-based permission checking
+
+#### 👥 Role Management Demo
+
+- Dynamic role creation and modification
+- Interactive role testing interface
 - Real-time policy updates
-- Access control scenarios
+
+#### 📁 JSON Assets Demo
+
+- Loading policies from external JSON files
+- Asset-based configuration management
+- Comprehensive permission testing
 
 ## 📚 Documentation
 
