@@ -207,7 +207,7 @@ void main() {
         };
 
         expect(() => policyManager.initialize(jsonPolicies),
-            throwsA(isA<StateError>()));
+            throwsA(isA<PolicySDKException>()));
         expect(policyManager.isInitialized, isFalse);
       });
 
@@ -343,7 +343,7 @@ void main() {
         mockStorage.setShouldThrowOnSave(true);
 
         expect(() => policyManager.initialize(jsonPolicies),
-            throwsA(isA<StateError>()));
+            throwsA(isA<PolicySDKException>()));
         expect(policyManager.isInitialized, isFalse);
       });
 
@@ -425,7 +425,7 @@ void main() {
 
         expect(
           () => policyManager.initialize(jsonPolicies),
-          throwsA(isA<StateError>()),
+          throwsA(isA<PolicySDKException>()),
         );
 
         expect(policyManager.isInitialized, isFalse);
@@ -444,7 +444,7 @@ void main() {
 
         expect(
           () => policyManager.initialize(jsonPolicies),
-          throwsA(isA<StateError>()),
+          throwsA(isA<PolicySDKException>()),
         );
       });
     });
@@ -931,11 +931,14 @@ void main() {
         // Make storage throw on save
         mockStorage.setShouldThrowOnSave(true);
 
-        // The method catches exceptions and doesn't rethrow them
-        await policyManager
-            .initializeFromJsonAssets('assets/policies/test.json');
+        // The method should throw PolicySDKException when storage fails
+        expect(
+          () => policyManager
+              .initializeFromJsonAssets('assets/policies/test.json'),
+          throwsA(isA<PolicySDKException>()),
+        );
 
-        // Should handle gracefully and not initialize due to storage error
+        // Should not be initialized due to storage error
         expect(policyManager.isInitialized, isFalse);
 
         // Clean up mock message handler

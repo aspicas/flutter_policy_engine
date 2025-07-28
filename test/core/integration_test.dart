@@ -1,7 +1,9 @@
+import 'package:flutter_policy_engine/flutter_policy_engine.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_policy_engine/src/core/policy_manager.dart';
 import 'package:flutter_policy_engine/src/core/memory_policy_storage.dart';
 import 'package:flutter_policy_engine/src/core/role_evaluator.dart';
+import 'package:flutter_policy_engine/src/exceptions/policy_sdk_exception.dart';
 
 void main() {
   group('Core Integration Tests', () {
@@ -169,7 +171,7 @@ void main() {
 
         // Should throw when storage fails
         expect(() => failingManager.initialize(jsonPolicies),
-            throwsA(isA<StateError>()));
+            throwsA(isA<PolicySDKException>()));
         expect(failingManager.isInitialized, isFalse);
       });
 
