@@ -8,6 +8,19 @@ import 'package:flutter_policy_engine/src/exceptions/i_policy_sdk_exceptions.dar
 /// the specific key that failed, the original error, and any additional
 /// validation errors.
 class JsonParseException implements IDetailPolicySDKException {
+  /// Creates a new JsonParseException.
+  ///
+  /// [message] should describe the parsing failure.
+  /// [key] optionally specifies which JSON key caused the failure.
+  /// [originalError] optionally provides the original parsing error.
+  /// [errors] optionally provides a map of field-specific validation errors.
+  JsonParseException(
+    this.message, {
+    this.key,
+    this.originalError,
+    this.errors,
+  });
+
   @override
   final String message;
 
@@ -22,19 +35,6 @@ class JsonParseException implements IDetailPolicySDKException {
   /// A map of field-specific validation errors encountered during parsing.
   @override
   final Map<String, String>? errors;
-
-  /// Creates a new JsonParseException.
-  ///
-  /// [message] should describe the parsing failure.
-  /// [key] optionally specifies which JSON key caused the failure.
-  /// [originalError] optionally provides the original parsing error.
-  /// [errors] optionally provides a map of field-specific validation errors.
-  JsonParseException(
-    this.message, {
-    this.key,
-    this.originalError,
-    this.errors,
-  });
 
   @override
   String toString() {
