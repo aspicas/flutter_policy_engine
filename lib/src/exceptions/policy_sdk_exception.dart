@@ -33,7 +33,7 @@ class PolicySDKException implements IPolicySDKException {
   /// - [exception]: An optional underlying exception that caused this error
   PolicySDKException(
     this.message, {
-    required this.exception,
+    this.exception,
   });
 
   /// A descriptive message explaining the error that occurred.

@@ -3,6 +3,7 @@ import 'package:flutter_policy_engine/src/core/interfaces/i_policy_evaluator.dar
 import 'package:flutter_policy_engine/src/core/interfaces/i_policy_storage.dart';
 import 'package:flutter_policy_engine/src/core/memory_policy_storage.dart';
 import 'package:flutter_policy_engine/src/core/role_evaluator.dart';
+import 'package:flutter_policy_engine/src/exceptions/policy_sdk_exception.dart';
 import 'package:flutter_policy_engine/src/models/role.dart';
 import 'package:flutter_policy_engine/src/utils/external_asset_handler.dart';
 import 'package:flutter_policy_engine/src/utils/json_handler.dart';
@@ -66,9 +67,7 @@ class PolicyManager extends ChangeNotifier {
   /// are JSON representations of [Role] objects.
   ///
   /// Throws:
-  /// - [JsonParseException] if policy parsing fails completely
-  /// - [FormatException] if the JSON data is malformed
-  /// - [ArgumentError] if policy parsing fails
+  /// - [PolicySDKException] if initialization fails for any reason, including malformed JSON, parsing errors, or storage issues.
   Future<void> initialize(Map<String, dynamic> jsonPolicies) async {
     try {
       LogHandler.info(
@@ -171,8 +170,10 @@ class PolicyManager extends ChangeNotifier {
         operation: 'policy_manager_initialize_error',
       );
 
-      // Re-throw to allow caller to handle the error
-      rethrow;
+      throw PolicySDKException(
+        'Failed to initialize policy manager',
+        exception: e is Exception ? e : null,
+      );
     }
   }
 
@@ -236,20 +237,8 @@ class PolicyManager extends ChangeNotifier {
   ///
   /// ## Throws
   ///
-  /// * [ArgumentError] - If [assetPath] is empty or null
-  ///
-  /// ## Dependencies
-  ///
-  /// This method depends on:
-  /// * [ExternalAssetHandler] - For loading and parsing the asset file
-  /// * [initialize] - For processing the loaded policy data
-  /// * [LogHandler] - For error logging and debugging
-  ///
+  /// * [PolicySDKException] - If initialization fails for any reason, including malformed JSON, parsing errors, or storage issues.
   Future<void> initializeFromJsonAssets(String assetPath) async {
-    if (assetPath.isEmpty) {
-      throw ArgumentError('Asset path cannot be empty');
-    }
-
     try {
       final assetHandler = ExternalAssetHandler(assetPath: assetPath);
       final jsonPolicies = await assetHandler.loadAssets();
@@ -368,6 +357,11 @@ class PolicyManager extends ChangeNotifier {
         context: {'asset_path': assetPath},
         operation: 'policy_manager_initialize_from_json_assets_error',
       );
+
+      throw PolicySDKException(
+        'Failed to initialize policy manager from JSON assets',
+        exception: e is Exception ? e : null,
+      );
     }
   }
 
@@ -402,11 +396,11 @@ class PolicyManager extends ChangeNotifier {
   /// [role] must not be null and should have a valid name.
   ///
   /// Throws:
-  /// - [ArgumentError] if [role] is null or has an invalid name
+  /// - [PolicySDKException] if [role] is null or has an invalid name
   /// - Storage-related exceptions if persistence fails
   Future<void> addRole(Role role) async {
     if (role.name.isEmpty) {
-      throw ArgumentError('Role name cannot be empty');
+      throw PolicySDKException('Role name cannot be empty');
     }
 
     _roles[role.name] = role;
@@ -428,11 +422,11 @@ class PolicyManager extends ChangeNotifier {
   /// [roleName] must not be null or empty.
   ///
   /// Throws:
-  /// - [ArgumentError] if [roleName] is null or empty
+  /// - [PolicySDKException] if [roleName] is null or empty
   /// - Storage-related exceptions if persistence fails
   Future<void> removeRole(String roleName) async {
     if (roleName.isEmpty) {
-      throw ArgumentError('Role name cannot be empty');
+      throw PolicySDKException('Role name cannot be empty');
     }
 
     _roles.remove(roleName);
@@ -454,11 +448,11 @@ class PolicyManager extends ChangeNotifier {
   /// [role] must not be null and should have a valid name.
   ///
   /// Throws:
-  /// - [ArgumentError] if [roleName] is null/empty or [role] is null/invalid
+  /// - [PolicySDKException] if [roleName] is null/empty or [role] is null/invalid
   /// - Storage-related exceptions if persistence fails
   Future<void> updateRole(String roleName, Role role) async {
     if (roleName.isEmpty && role.name.isEmpty) {
-      throw ArgumentError('Role name cannot be empty');
+      throw PolicySDKException('Role name cannot be empty');
     }
 
     _roles[roleName] = role;
