@@ -570,6 +570,82 @@ void main() {
             .setMockMessageHandler('flutter/assets', null);
       });
 
+      test('should handle non-Map policy values in JSON asset', () async {
+        // Mock the rootBundle to return JSON with non-Map policy values
+        const nonMapJson = '''
+        {
+          "admin": "not_a_map",
+          "user": 123,
+          "guest": ["read", "write"],
+          "valid_role": {
+            "allowedContent": ["read"]
+          }
+        }
+        ''';
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', (ByteData? message) async {
+          return ByteData.view(
+              Uint8List.fromList(utf8.encode(nonMapJson)).buffer);
+        });
+
+        await policyManager
+            .initializeFromJsonAssets('assets/policies/non_map.json');
+
+        // Should initialize with only valid policies
+        expect(policyManager.isInitialized, isTrue);
+        expect(policyManager.roles.length, equals(1));
+        expect(policyManager.roles['valid_role'], isNotNull);
+        expect(policyManager.roles['valid_role']!.name, equals('valid_role'));
+        expect(policyManager.roles['valid_role']!.allowedContent,
+            contains('read'));
+        expect(policyManager.roles['admin'], isNull);
+        expect(policyManager.roles['user'], isNull);
+        expect(policyManager.roles['guest'], isNull);
+
+        // Clean up mock message handler
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', null);
+      });
+
+      test('should execute warning log for non-Map values', () async {
+        // Mock the rootBundle to return JSON with non-Map policy values
+        const nonMapJson = '''
+        {
+          "admin": "not_a_map",
+          "user": 123,
+          "guest": ["read", "write"],
+          "valid_role": {
+            "allowedContent": ["read"]
+          }
+        }
+        ''';
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', (ByteData? message) async {
+          return ByteData.view(
+              Uint8List.fromList(utf8.encode(nonMapJson)).buffer);
+        });
+
+        await policyManager
+            .initializeFromJsonAssets('assets/policies/non_map.json');
+
+        // Should initialize with only valid policies
+        expect(policyManager.isInitialized, isTrue);
+        expect(policyManager.roles.length, equals(1));
+        expect(policyManager.roles['valid_role'], isNotNull);
+        expect(policyManager.roles['valid_role']!.name, equals('valid_role'));
+        expect(policyManager.roles['valid_role']!.allowedContent,
+            contains('read'));
+        expect(policyManager.roles['admin'], isNull);
+        expect(policyManager.roles['user'], isNull);
+        expect(policyManager.roles['guest'], isNull);
+
+        // Clean up mock message handler
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMessageHandler('flutter/assets', null);
+      });
+
       test('should handle empty JSON object in asset', () async {
         // Mock the rootBundle to return empty JSON object
         const emptyJson = '{}';
