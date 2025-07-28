@@ -1,0 +1,26 @@
+# Ignore specific folders
+build/
+.idea/
+.vscode/
+android/
+ios/
+web/
+windows/
+linux/
+macos/
+coverage/
+
+# Ignore especific files
+*.log
+*.tmp
+.env
+.env.local
+
+# Ignore development folders
+node_modules/
+docs/
+scripts/
+
+# Ignore development files
+docs.json
+setup.sh

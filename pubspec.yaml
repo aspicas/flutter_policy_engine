@@ -1,6 +1,6 @@
 name: flutter_policy_engine
 description: "A lightweight, extensible policy engine for Flutter enabling Attribute-Based Access Control (ABAC) and Role-Based Access Control (RBAC) with declarative rule definitions."
-version: 1.0.0
+version: 1.1.0
 # homepage: https://github.com/davidgarcia93/flutter_policy_engine
 repository: https://github.com/aspicas/flutter_policy_engine
 issue_tracker: https://github.com/aspicas/flutter_policy_engine/issues
