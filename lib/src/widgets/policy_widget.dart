@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_policy_engine/flutter_policy_engine.dart';
 import 'package:flutter_policy_engine/src/core/policy_provider.dart';
 import 'package:flutter_policy_engine/src/exceptions/i_policy_sdk_exceptions.dart';
 
@@ -70,14 +71,17 @@ class PolicyWidget extends StatelessWidget {
     } catch (e) {
       if (e is IPolicySDKException) {
         assert(() {
-          throw FlutterError('Error en PolicyWidget: ${e.message}');
+          throw PolicySDKException('Error en PolicyWidget: ${e.message}');
         }());
 
         // On production, deny access silently
         onAccessDenied?.call();
         return fallback ?? const SizedBox.shrink();
       }
-      rethrow;
+      throw PolicySDKException(
+        'Error en PolicyWidget',
+        exception: e as Exception,
+      );
     }
   }
 }
