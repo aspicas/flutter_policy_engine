@@ -1,6 +1,7 @@
 import 'package:flutter_policy_engine/src/exceptions/json_parse_exception.dart';
 import 'package:flutter_policy_engine/src/exceptions/json_serialize_exception.dart';
 import 'package:flutter_policy_engine/src/utils/log_handler.dart';
+import 'dart:convert';
 
 /// Utility for type-safe JSON conversions with generic support.
 ///
@@ -260,6 +261,104 @@ class JsonHandler {
         operation: 'json_parse_single_error',
       );
       return null;
+    }
+  }
+
+  /// Parses a JSON string into a Map&lt;String, dynamic&gt; with comprehensive error handling.
+  ///
+  /// This function safely converts a JSON string representation into a strongly-typed
+  /// map structure. It includes validation to ensure the parsed result is actually
+  /// a map and provides detailed error information for debugging.
+  ///
+  /// The function handles various error scenarios:
+  /// - Invalid JSON syntax
+  /// - JSON that doesn't represent an object (e.g., arrays, primitives)
+  /// - Empty or null input strings
+  ///
+  /// Returns a [Map&lt;String, dynamic&gt;] containing the parsed JSON data.
+  ///
+  /// Throws [JsonParseException] if the JSON string cannot be parsed or doesn't
+  /// represent a valid JSON object.
+  ///
+  /// Example usage:
+  /// ```dart
+  /// try {
+  ///   final jsonString = '{"name": "John", "age": 30}';
+  ///   final result = JsonHandler.parseJsonString(jsonString);
+  ///   print(result['name']); // Output: John
+  /// } catch (e) {
+  ///   print('Failed to parse JSON: $e');
+  /// }
+  /// ```
+  static Map<String, dynamic> parseJsonString(
+    String jsonString, {
+    String? context,
+  }) {
+    LogHandler.debug(
+      'Starting JSON string parsing',
+      context: {
+        'input_length': jsonString.length,
+        'context': context ?? 'unknown',
+      },
+      operation: 'json_parse_string',
+    );
+
+    try {
+      // Validate input
+      if (jsonString.isEmpty) {
+        throw JsonParseException(
+          'Cannot parse empty JSON string',
+        );
+      }
+
+      // Parse JSON string
+      final dynamic parsed = jsonDecode(jsonString);
+
+      // Validate that the parsed result is a map
+      if (parsed is! Map<String, dynamic>) {
+        throw JsonParseException(
+          'JSON string does not represent a valid object. '
+          'Expected Map<String, dynamic>, got ${parsed.runtimeType}',
+          originalError: TypeError(),
+        );
+      }
+
+      LogHandler.debug(
+        'Successfully parsed JSON string',
+        context: {
+          'parsed_keys_count': parsed.length,
+          'context': context ?? 'unknown',
+        },
+        operation: 'json_parse_string_success',
+      );
+
+      return parsed;
+    } catch (e, stackTrace) {
+      final errorMessage = 'Failed to parse JSON string: ${e.toString()}';
+
+      LogHandler.error(
+        errorMessage,
+        error: e,
+        stackTrace: stackTrace,
+        context: {
+          'input_length': jsonString.length,
+          'input_preview': jsonString.length > 100
+              ? '${jsonString.substring(0, 100)}...'
+              : jsonString,
+          'context': context ?? 'unknown',
+        },
+        operation: 'json_parse_string_error',
+      );
+
+      // Re-throw as JsonParseException if it's not already
+      if (e is JsonParseException) {
+        rethrow;
+      }
+
+      throw JsonParseException(
+        errorMessage,
+        originalError: e,
+      );
     }
   }
 }

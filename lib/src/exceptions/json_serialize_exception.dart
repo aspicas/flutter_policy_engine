@@ -7,6 +7,19 @@ import 'package:flutter_policy_engine/src/exceptions/i_policy_sdk_exceptions.dar
 /// occurs when policy objects contain non-serializable data types
 /// or circular references.
 class JsonSerializeException implements IDetailPolicySDKException {
+  /// Creates a new JsonSerializeException.
+  ///
+  /// [message] should describe the serialization failure.
+  /// [key] optionally specifies which object key caused the failure.
+  /// [originalError] optionally provides the original serialization error.
+  /// [errors] optionally provides a map of field-specific serialization errors.
+  JsonSerializeException(
+    this.message, {
+    this.key,
+    this.originalError,
+    this.errors,
+  });
+
   @override
   final String message;
 
@@ -21,19 +34,6 @@ class JsonSerializeException implements IDetailPolicySDKException {
   /// A map of field-specific serialization errors encountered.
   @override
   final Map<String, String>? errors;
-
-  /// Creates a new JsonSerializeException.
-  ///
-  /// [message] should describe the serialization failure.
-  /// [key] optionally specifies which object key caused the failure.
-  /// [originalError] optionally provides the original serialization error.
-  /// [errors] optionally provides a map of field-specific serialization errors.
-  JsonSerializeException(
-    this.message, {
-    this.key,
-    this.originalError,
-    this.errors,
-  });
 
   @override
   String toString() {

@@ -15,12 +15,14 @@ import 'package:flutter_policy_engine/src/exceptions/i_policy_sdk_exceptions.dar
 /// }
 /// ```
 class PolicyNotInitializedException implements IPolicySDKException {
+  /// Creates a new [PolicyNotInitializedException] with the given [message].
+  const PolicyNotInitializedException(
+    this.message,
+  );
+
   /// A message describing the initialization error.
   @override
   final String message;
-
-  /// Creates a new [PolicyNotInitializedException] with the given [message].
-  const PolicyNotInitializedException(this.message);
 
   @override
   String toString() {
