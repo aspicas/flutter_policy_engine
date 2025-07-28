@@ -1,6 +1,5 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_policy_engine/flutter_policy_engine.dart';
-import 'package:flutter_policy_engine/src/core/policy_provider.dart';
 import 'package:flutter_policy_engine/src/exceptions/i_policy_sdk_exceptions.dart';
 
 /// A widget that conditionally displays its [child] based on policy access control.

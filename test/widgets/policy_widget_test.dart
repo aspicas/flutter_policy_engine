@@ -5,7 +5,6 @@ import 'package:flutter_policy_engine/src/core/policy_provider.dart';
 import 'package:flutter_policy_engine/src/core/policy_manager.dart';
 import 'package:flutter_policy_engine/src/core/interfaces/i_policy_evaluator.dart';
 import 'package:flutter_policy_engine/src/core/interfaces/i_policy_storage.dart';
-import 'package:flutter_policy_engine/src/exceptions/i_policy_sdk_exceptions.dart';
 import 'package:flutter_policy_engine/src/exceptions/policy_sdk_exception.dart';
 
 /// Mock implementation of IPolicyStorage for testing
