@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_policy_engine/src/exceptions/policy_sdk_exception.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_policy_engine/src/core/policy_manager.dart';
 import 'package:flutter_policy_engine/src/core/interfaces/i_policy_evaluator.dart';
@@ -493,7 +494,7 @@ void main() {
       test('should handle empty asset path', () async {
         expect(
           () => policyManager.initializeFromJsonAssets(''),
-          throwsA(isA<ArgumentError>()),
+          throwsA(isA<PolicySDKException>()),
         );
       });
 
@@ -982,7 +983,7 @@ void main() {
 
         expect(
           () => policyManager.addRole(invalidRole),
-          throwsA(isA<ArgumentError>()),
+          throwsA(isA<PolicySDKException>()),
         );
       });
 
@@ -1085,7 +1086,7 @@ void main() {
 
         expect(
           () => policyManager.removeRole(''),
-          throwsA(isA<ArgumentError>()),
+          throwsA(isA<PolicySDKException>()),
         );
       });
 
@@ -1209,7 +1210,7 @@ void main() {
 
         expect(
           () => policyManager.updateRole('', role),
-          throwsA(isA<ArgumentError>()),
+          throwsA(isA<PolicySDKException>()),
         );
       });
 
@@ -1222,7 +1223,7 @@ void main() {
 
         expect(
           () => policyManager.updateRole('', invalidRole),
-          throwsA(isA<ArgumentError>()),
+          throwsA(isA<PolicySDKException>()),
         );
       });
 
