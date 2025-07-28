@@ -41,6 +41,11 @@
           "icon": "code"
         },
         {
+          "title": "JSON Assets Demo",
+          "href": "/examples/json-assets-demo",
+          "icon": "file-text"
+        },
+        {
           "title": "Role Management Demo",
           "href": "/examples/role-management-demo",
           "icon": "settings"
