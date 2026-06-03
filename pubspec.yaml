@@ -6,10 +6,11 @@ repository: https://github.com/aspicas/flutter_policy_engine
 issue_tracker: https://github.com/aspicas/flutter_policy_engine/issues
 documentation: https://github.com/aspicas/flutter_policy_engine#readme
 topics:
+  - authorization
+  - engine
   - flutter
   - policy
-  - engine
-  - authorization
+  - rbac
 # funding:
 #   - https://github.com/sponsors/davidgarcia93
 # maintainers:

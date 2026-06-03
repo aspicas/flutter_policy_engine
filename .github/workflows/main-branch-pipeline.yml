@@ -67,7 +67,7 @@ jobs:
       - name: 🔍 Check domain layer has no Flutter imports
         run: |
           if find lib/src/domain -name '*.dart' 2>/dev/null | \
-             xargs grep -l "package:flutter\|dart:ui\|dart:io" 2>/dev/null | grep .; then
+             xargs grep -l "package:flutter/\|dart:ui\|dart:io" 2>/dev/null | grep .; then
             echo "❌ Domain layer contains Flutter/IO imports!"
             exit 1
           else

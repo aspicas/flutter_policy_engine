@@ -1,26 +1,29 @@
-# Ignore specific folders
+# Build artifacts and IDE
 build/
+coverage/
 .idea/
 .vscode/
+
+# Platform projects (not part of the package)
 android/
 ios/
-web/
-windows/
 linux/
 macos/
-coverage/
+web/
+windows/
 
-# Ignore especific files
+# Development assets
+node_modules/
+scripts/
+
+# Temp / secrets
 *.log
 *.tmp
 .env
 .env.local
-
-# Ignore development folders
-node_modules/
-docs/
-scripts/
-
-# Ignore development files
 docs.json
 setup.sh
+
+# CI tooling
+tools/
+.github/
