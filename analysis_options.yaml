@@ -5,25 +5,10 @@ analyzer:
     strict-casts: true
     strict-inference: true
     strict-raw-types: true
-  # Legacy directories are excluded until Phase 5 removes them.
-  # New v2 code (lib/src/domain, lib/src/application, lib/src/infrastructure,
-  # lib/src/presentation) is NOT excluded and receives full strict analysis.
   exclude:
     - '**/*.g.dart'
     - '**/generated/**'
-    # Legacy lib directories (replaced in Phase 5)
-    - 'lib/src/core/**'
-    - 'lib/src/utils/**'
-    - 'lib/src/widgets/**'
-    - 'lib/src/models/**'
-    - 'lib/src/exceptions/**'
-    # Legacy test directories (replaced in Phase 1-4)
-    - 'test/core/**'
-    - 'test/utils/**'
-    - 'test/widgets/**'
-    - 'test/models/**'
-    - 'test/exceptions/**'
-    # Example app (refreshed in Phase 6)
+    # Example app is refreshed in Phase 6
     - 'example/**'
 
 linter:
@@ -32,5 +17,5 @@ linter:
     prefer_single_quotes: true
     avoid_dynamic_calls: true
     avoid_type_to_string: true
-    # Intentionally disabled: single-method abstract classes are valid port interfaces
+    # Single-method abstract classes are valid port interfaces in Clean Architecture
     one_member_abstracts: false
