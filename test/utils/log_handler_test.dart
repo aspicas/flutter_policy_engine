@@ -1,5 +1,7 @@
-import 'package:flutter_test/flutter_test.dart';
+// ignore_for_file: inference_failure_on_instance_creation
+
 import 'package:flutter_policy_engine/src/utils/log_handler.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('LogHandler', () {

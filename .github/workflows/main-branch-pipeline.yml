@@ -54,7 +54,27 @@ jobs:
           npx commitlint --from=$(git rev-list --max-parents=0 HEAD) --to=HEAD --verbose
           echo "result=success" >> $GITHUB_OUTPUT
 
-  # Step 3: Run Flutter tests
+  # Step 3: Domain purity check (domain layer must not import Flutter)
+  domain-purity:
+    name: Domain Purity Check
+    runs-on: ubuntu-latest
+    needs: validate-resource
+    if: needs.validate-resource.outputs.validated == 'success'
+    steps:
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔍 Check domain layer has no Flutter imports
+        run: |
+          if find lib/src/domain -name '*.dart' 2>/dev/null | \
+             xargs grep -l "package:flutter\|dart:ui\|dart:io" 2>/dev/null | grep .; then
+            echo "❌ Domain layer contains Flutter/IO imports!"
+            exit 1
+          else
+            echo "✅ Domain layer is pure Dart"
+          fi
+
+  # Step 4: Run Flutter tests and enforce coverage
   test:
     name: Flutter Tests & Coverage
     runs-on: ubuntu-latest
@@ -86,3 +106,10 @@ jobs:
         run: |
           flutter test --coverage
           echo "result=success" >> $GITHUB_OUTPUT
+
+      - name: Enforce coverage threshold (≥80%)
+        uses: VeryGoodOpenSource/very_good_coverage@v3
+        with:
+          path: coverage/lcov.info
+          min_coverage: 80
+          exclude: "**/*.g.dart **/generated/**"

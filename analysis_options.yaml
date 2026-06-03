@@ -1,26 +1,36 @@
-include: package:lints/recommended.yaml
+include: package:very_good_analysis/analysis_options.yaml
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  # Legacy directories are excluded until Phase 5 removes them.
+  # New v2 code (lib/src/domain, lib/src/application, lib/src/infrastructure,
+  # lib/src/presentation) is NOT excluded and receives full strict analysis.
+  exclude:
+    - '**/*.g.dart'
+    - '**/generated/**'
+    # Legacy lib directories (replaced in Phase 5)
+    - 'lib/src/core/**'
+    - 'lib/src/utils/**'
+    - 'lib/src/widgets/**'
+    - 'lib/src/models/**'
+    - 'lib/src/exceptions/**'
+    # Legacy test directories (replaced in Phase 1-4)
+    - 'test/core/**'
+    - 'test/utils/**'
+    - 'test/widgets/**'
+    - 'test/models/**'
+    - 'test/exceptions/**'
+    # Example app (refreshed in Phase 6)
+    - 'example/**'
 
 linter:
   rules:
-    # Documentation
     public_member_api_docs: true
-
-    # Performance
-    avoid_print: true
-    prefer_const_constructors: true
-    prefer_const_declarations: true
-
-    # Style
-    prefer_final_locals: true
     prefer_single_quotes: true
-
-    # Safety
     avoid_dynamic_calls: true
     avoid_type_to_string: true
-
-    # Library specific
-    library_private_types_in_public_api: true
-    missing_whitespace_between_adjacent_strings: true
+    # Intentionally disabled: single-method abstract classes are valid port interfaces
+    one_member_abstracts: false

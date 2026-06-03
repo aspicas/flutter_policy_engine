@@ -1,3 +1,5 @@
+// ignore_for_file: inference_failure_on_collection_literal
+
 import 'package:flutter_policy_engine/flutter_policy_engine.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_policy_engine/src/core/memory_policy_storage.dart';

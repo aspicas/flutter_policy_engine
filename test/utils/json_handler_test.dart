@@ -1,8 +1,11 @@
+// ignore_for_file: inference_failure_on_collection_literal
+
+import 'dart:convert';
+
 import 'package:flutter_policy_engine/src/exceptions/json_parse_exception.dart';
 import 'package:flutter_policy_engine/src/exceptions/json_serialize_exception.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_policy_engine/src/utils/json_handler.dart';
-import 'dart:convert'; // Added for jsonEncode
+import 'package:flutter_test/flutter_test.dart';
 
 // Test data classes for JSON conversion testing
 class TestUser {

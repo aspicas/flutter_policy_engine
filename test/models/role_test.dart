@@ -1,3 +1,5 @@
+// ignore_for_file: inference_failure_on_collection_literal
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_policy_engine/src/models/role.dart';
 

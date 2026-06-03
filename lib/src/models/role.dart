@@ -113,7 +113,7 @@ class Role {
   @override
   int get hashCode {
     final sortedContent = List<String>.from(allowedContent)..sort();
-    return Object.hash(name, const ListEquality().hash(sortedContent));
+    return Object.hash(name, const ListEquality<String>().hash(sortedContent));
   }
 
   /// Returns a string representation of this policy.
