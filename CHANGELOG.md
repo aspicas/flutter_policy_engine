@@ -1,3 +1,24 @@
+## 1.2.0 (2026-06-04)
+
+* Merge pull request #32 from aspicas/hotfix/handle-docs-for-public ([3e7b959](https://github.com/aspicas/flutter_policy_engine/commit/3e7b959)), closes [#32](https://github.com/aspicas/flutter_policy_engine/issues/32)
+* Merge pull request #33 from aspicas/develop ([08a67dc](https://github.com/aspicas/flutter_policy_engine/commit/08a67dc)), closes [#33](https://github.com/aspicas/flutter_policy_engine/issues/33)
+* Merge pull request #35 from aspicas/feature/full-reestructure ([5591a41](https://github.com/aspicas/flutter_policy_engine/commit/5591a41)), closes [#35](https://github.com/aspicas/flutter_policy_engine/issues/35)
+* Merge pull request #36 from aspicas/develop ([d9e047c](https://github.com/aspicas/flutter_policy_engine/commit/d9e047c)), closes [#36](https://github.com/aspicas/flutter_policy_engine/issues/36)
+* chore: add initial project setup files ([1fef976](https://github.com/aspicas/flutter_policy_engine/commit/1fef976))
+* chore: simplify commit message validation in CI workflows ([671cc39](https://github.com/aspicas/flutter_policy_engine/commit/671cc39))
+* chore: update commit message validation in CI workflows ([1b55d69](https://github.com/aspicas/flutter_policy_engine/commit/1b55d69))
+* chore: update setup.sh permissions to executable ([3f9067f](https://github.com/aspicas/flutter_policy_engine/commit/3f9067f))
+* chore(phase-7): final polish — CHANGELOG, domain purity fix, pubignore, topics ([fc16844](https://github.com/aspicas/flutter_policy_engine/commit/fc16844))
+* refactor: clean up code formatting and improve readability ([f1ead17](https://github.com/aspicas/flutter_policy_engine/commit/f1ead17))
+* refactor: update analysis options and enhance CI workflows ([4ccb86a](https://github.com/aspicas/flutter_policy_engine/commit/4ccb86a))
+* fix: correct initialValue to value in dropdowns for role and resource selection ([1822344](https://github.com/aspicas/flutter_policy_engine/commit/1822344))
+* feat: add CocoaPods support for iOS project ([d40c9f1](https://github.com/aspicas/flutter_policy_engine/commit/d40c9f1))
+* feat: add integration tests and enhance example app ([b40a72d](https://github.com/aspicas/flutter_policy_engine/commit/b40a72d))
+* feat: implement policy engine with role management and asset loading ([2d6316d](https://github.com/aspicas/flutter_policy_engine/commit/2d6316d))
+* feat: upgrade to v2.0.0 with Clean Architecture and enhanced policy management ([d1f90a7](https://github.com/aspicas/flutter_policy_engine/commit/d1f90a7))
+* feat(phase-4/5): add presentation layer and remove legacy code ([a423068](https://github.com/aspicas/flutter_policy_engine/commit/a423068))
+* docs(README): enhance documentation with JSON asset loading and robust error handling ([f440d6b](https://github.com/aspicas/flutter_policy_engine/commit/f440d6b))
+
 ## [2.0.0] — 2026-06-03
 
 ### Breaking changes
