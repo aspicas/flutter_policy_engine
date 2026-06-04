@@ -1,26 +1,21 @@
-include: package:lints/recommended.yaml
+include: package:very_good_analysis/analysis_options.yaml
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  exclude:
+    - '**/*.g.dart'
+    - '**/generated/**'
+    # Example app is refreshed in Phase 6
+    - 'example/**'
 
 linter:
   rules:
-    # Documentation
     public_member_api_docs: true
-
-    # Performance
-    avoid_print: true
-    prefer_const_constructors: true
-    prefer_const_declarations: true
-
-    # Style
-    prefer_final_locals: true
     prefer_single_quotes: true
-
-    # Safety
     avoid_dynamic_calls: true
     avoid_type_to_string: true
-
-    # Library specific
-    library_private_types_in_public_api: true
-    missing_whitespace_between_adjacent_strings: true
+    # Single-method abstract classes are valid port interfaces in Clean Architecture
+    one_member_abstracts: false
