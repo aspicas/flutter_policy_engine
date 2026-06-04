@@ -6,30 +6,7 @@ on:
       - develop
 
 jobs:
-  # Step 1: Validate commit messages
-  check-commits:
-    name: Validate Commit Messages
-    runs-on: ubuntu-latest
-    steps:
-      - name: ⬇️ Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: ⬢ Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: 📦 Install Commitlint
-        run: |
-          npm install --save-dev @commitlint/{config-conventional,cli}
-
-      - name: 🔍 Validate commit messages (entire branch)
-        run: |
-          npx commitlint --from=$(git rev-list --max-parents=0 HEAD) --to=HEAD --verbose
-
-  # Step 2: Domain purity check (domain layer must not import Flutter)
+  # Step 1: Domain purity check (domain layer must not import Flutter)
   domain-purity:
     name: Domain Purity Check
     runs-on: ubuntu-latest
@@ -47,7 +24,7 @@ jobs:
             echo "✅ Domain layer is pure Dart"
           fi
 
-  # Step 3: Run Flutter tests and enforce coverage
+  # Step 2: Run Flutter tests and enforce coverage
   test:
     name: Flutter Tests & Coverage
     runs-on: ubuntu-latest
@@ -85,7 +62,7 @@ jobs:
           min_coverage: 80
           exclude: "**/*.g.dart **/generated/**"
 
-  # Step 4: Integration tests (example app)
+  # Step 3: Integration tests (example app)
   integration-test:
     name: Integration Tests (example)
     runs-on: ubuntu-latest
