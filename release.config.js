@@ -7,13 +7,21 @@ module.exports = {
       "@semantic-release/commit-analyzer", // Detects the release type (major, minor, patch)
       {
         preset: "conventionalcommits",
+        // Preset exports parserOpts, but commit-analyzer only spreads .parser — set explicitly.
+        parserOpts: {
+          headerPattern: /^(\w*)(?:\((.*)\))?!?: (.*)$/,
+          breakingHeaderPattern: /^(\w*)(?:\((.*)\))?!: (.*)$/,
+          headerCorrespondence: ["type", "scope", "subject"],
+          noteKeywords: ["BREAKING CHANGE", "BREAKING-CHANGE"],
+        },
         releaseRules: [
+          // Breaking changes first (highest precedence among type rules)
+          { breaking: true, release: "major" },
           // Ignore merge commits
           { subject: "*Merge pull request*", release: false },
           { subject: "*Merge branch*", release: false },
           // Ignore chore commits (they won't trigger releases)
           { type: "chore", release: false },
-          // You can also ignore other types if needed
           { type: "docs", release: false },
           { type: "style", release: false },
           { type: "refactor", release: false },
@@ -22,8 +30,6 @@ module.exports = {
           { type: "feat", release: "minor" },
           { type: "fix", release: "patch" },
           { type: "perf", release: "patch" },
-          // Breaking changes always trigger major
-          { breaking: true, release: "major" },
         ],
       },
     ],
