@@ -1,6 +1,6 @@
 name: flutter_policy_engine
 description: "A lightweight, extensible policy engine for Flutter enabling RBAC and basic ABAC with Clean Architecture, injectable logger, and persistent storage."
-version: 1.2.0
+version: 2.0.0
 # homepage: https://github.com/davidgarcia93/flutter_policy_engine
 repository: https://github.com/aspicas/flutter_policy_engine
 issue_tracker: https://github.com/aspicas/flutter_policy_engine/issues

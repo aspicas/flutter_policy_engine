@@ -1,3 +1,18 @@
+## 2.0.0 (2026-06-04)
+
+* fix!: resolve issue with dropdown state management in role and resource selection ([b47c8c1](https://github.com/aspicas/flutter_policy_engine/commit/b47c8c1))
+* fix(release)!: configure semantic-release parser for conventional commits ([55d7b3a](https://github.com/aspicas/flutter_policy_engine/commit/55d7b3a))
+* Merge pull request #37 from aspicas/develop ([fdaad55](https://github.com/aspicas/flutter_policy_engine/commit/fdaad55)), closes [#37](https://github.com/aspicas/flutter_policy_engine/issues/37)
+
+
+### BREAKING CHANGE
+
+* commit-analyzer now loads parserOpts explicitly so fix!/feat!
+and BREAKING CHANGE footers are recognized. Restores major releases for breaking
+commits that were previously skipped due to an empty parser config.
+
+Co-authored-by: Cursor <cursoragent@cursor.com>
+
 ## 1.2.0 (2026-06-04)
 
 * Merge pull request #32 from aspicas/hotfix/handle-docs-for-public ([3e7b959](https://github.com/aspicas/flutter_policy_engine/commit/3e7b959)), closes [#32](https://github.com/aspicas/flutter_policy_engine/issues/32)
