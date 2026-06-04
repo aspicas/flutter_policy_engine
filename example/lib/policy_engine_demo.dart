@@ -569,7 +569,7 @@ class _RoleDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
-      initialValue: value,
+      value: value,
       decoration: const InputDecoration(
         labelText: 'Role',
         border: OutlineInputBorder(),
@@ -591,7 +591,7 @@ class _ResourceDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
-      initialValue: value,
+      value: value,
       decoration: const InputDecoration(
         labelText: 'Resource',
         border: OutlineInputBorder(),
