@@ -10,8 +10,6 @@ jobs:
   check-commits:
     name: Validate Commit Messages
     runs-on: ubuntu-latest
-    outputs:
-      commits-validated: ${{ steps.validate-commits.outputs.result }}
     steps:
       - name: ⬇️ Checkout code
         uses: actions/checkout@v3
@@ -28,10 +26,8 @@ jobs:
           npm install --save-dev @commitlint/{config-conventional,cli}
 
       - name: 🔍 Validate commit messages (entire branch)
-        id: validate-commits
         run: |
           npx commitlint --from=$(git rev-list --max-parents=0 HEAD) --to=HEAD --verbose
-          echo "result=success" >> $GITHUB_OUTPUT
 
   # Step 2: Domain purity check (domain layer must not import Flutter)
   domain-purity:
@@ -55,8 +51,6 @@ jobs:
   test:
     name: Flutter Tests & Coverage
     runs-on: ubuntu-latest
-    needs: check-commits
-    if: needs.check-commits.outputs.commits-validated == 'success'
     outputs:
       tests-passed: ${{ steps.run-tests.outputs.result }}
     steps:
