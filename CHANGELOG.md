@@ -1,3 +1,49 @@
+## [2.0.0] — 2026-06-03
+
+### Breaking changes
+
+- **Removed** `PolicyManager`, `PolicyProvider`, `PolicyWidget`, `Role`,
+  `LogHandler`, `JsonHandler`, `ExternalAssetHandler`, `IPolicyEvaluator`,
+  `RoleEvaluator`, `IPolicyStorage`, `MemoryPolicyStorage`,
+  `PolicySDKException`, `PolicyNotInitializedException`,
+  `JsonParseException`, `JsonSerializeException` — replaced by the v2 API.
+- **JSON schema change**: `"allowedContent"` key renamed to
+  `"allowedResources"`; roles must be nested under a top-level `"roles"` key.
+
+### Added
+
+- **Clean Architecture** in four layers: Domain, Application, Infrastructure,
+  Presentation.
+- **Domain**: `Policy`, `RoleEntity`, `RoleName`, `Subject`, `Resource`,
+  `AccessDecision`, `AbacPolicy`, `AttributeRule`; `DomainFailure` sealed
+  class with typed subtypes; `IPolicyRepository` interface; `RbacEvaluator`,
+  `AbacEvaluator`, `CompositeEvaluator` with `denyOverrides` /
+  `allowOverrides` strategies.
+- **Application**: `PolicyEngine` facade; `EvaluateAccess`, `LoadPoliciesFromMap`,
+  `LoadPoliciesFromAsset`, `AddRole`, `UpdateRole`, `RemoveRole`, `ListRoles`
+  use cases; `ILogger` and `IAssetLoader` ports; `Result<T, E>` type
+  (no exceptions escape the domain boundary).
+- **Infrastructure**: `ConsoleLogger`, `NoopLogger`, `InMemoryPolicyRepository`,
+  `SharedPreferencesPolicyRepository`, `FlutterAssetLoader`, `PolicyJsonCodec`
+  (v2 canonical schema).
+- **Presentation**: `PolicyEngineController` (`ChangeNotifier`),
+  `PolicyEngineScope` (`InheritedNotifier` — fixes v1 rebuild bug),
+  `PolicyGate`, `PolicyBuilder`.
+- 216 unit / widget tests + 12 E2E tests covering all specs.
+- Contract test suites for every port (`IPolicyRepository`, `ILogger`,
+  `IAssetLoader`).
+- BDD feature tests for specs 001–008.
+- CI: coverage gate ≥ 80 %, domain-purity check, E2E job.
+- `docs/migration-v1-to-v2.md` with full equivalence table.
+
+### Changed
+
+- `pubspec.yaml` version bumped to `2.0.0`.
+- `analysis_options.yaml` now uses `very_good_analysis` with strict modes.
+- Example app rewritten against the v2 API with three live demos.
+
+---
+
 ## 1.1.0 (2025-07-28)
 
 * feat(policy_manager)!: add initializeFromJsonAssets method ([26995d4](https://github.com/aspicas/flutter_policy_engine/commit/26995d4))

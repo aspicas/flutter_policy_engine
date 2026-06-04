@@ -1,101 +1,67 @@
-import 'dart:developer';
+/// Shared demo data for the example app.
+library demo_content;
 
-import 'package:flutter/material.dart';
-import 'package:flutter_policy_engine/flutter_policy_engine.dart';
+/// Default inline policy map (v2 canonical schema).
+const Map<String, dynamic> kDemoPolicy = <String, dynamic>{
+  'roles': <String, dynamic>{
+    'admin': <String, dynamic>{
+      'allowedResources': <String>[
+        'dashboard',
+        'settings',
+        'users',
+        'reports',
+        'analytics',
+        'admin_panel',
+      ],
+    },
+    'manager': <String, dynamic>{
+      'allowedResources': <String>[
+        'dashboard',
+        'reports',
+        'analytics',
+        'team_content',
+      ],
+    },
+    'editor': <String, dynamic>{
+      'allowedResources': <String>[
+        'dashboard',
+        'posts',
+        'drafts',
+        'published_content',
+      ],
+    },
+    'viewer': <String, dynamic>{
+      'allowedResources': <String>[
+        'dashboard',
+        'reports',
+        'published_content',
+      ],
+    },
+    'guest': <String, dynamic>{
+      'allowedResources': <String>['dashboard'],
+    },
+  },
+};
 
-class DemoContent extends StatefulWidget {
-  const DemoContent({super.key});
+/// Available roles for the demo dropdowns.
+const List<String> kDemoRoles = <String>[
+  'admin',
+  'manager',
+  'editor',
+  'viewer',
+  'guest',
+];
 
-  @override
-  State<DemoContent> createState() => _DemoContentState();
-}
-
-class _DemoContentState extends State<DemoContent> {
-  String _currentRole = 'guest';
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Rol actual: $_currentRole',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 16),
-
-          // Selector de rol
-          Row(
-            children: [
-              _buildRoleButton('guest'),
-              const SizedBox(width: 8),
-              _buildRoleButton('user'),
-              const SizedBox(width: 8),
-              _buildRoleButton('admin'),
-            ],
-          ),
-
-          const SizedBox(height: 32),
-
-          // Ejemplos de PolicyWidget
-          _buildPolicyExample('LoginPage', 'Página de Login'),
-          _buildPolicyExample('Dashboard', 'Dashboard'),
-          _buildPolicyExample('UserManagement', 'Gestión de Usuarios'),
-          _buildPolicyExample('Settings', 'Configuración'),
-
-          const SizedBox(height: 32),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRoleButton(String role) {
-    return ElevatedButton(
-      onPressed: () {
-        setState(() {
-          _currentRole = role;
-        });
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: _currentRole == role ? Colors.blue : Colors.grey,
-      ),
-      child: Text(role),
-    );
-  }
-
-  Widget _buildPolicyExample(String content, String displayName) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('$displayName:'),
-          const SizedBox(height: 4),
-          PolicyWidget(
-            role: _currentRole,
-            content: content,
-            fallback: Card(
-              color: Colors.red[100],
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text('Acceso denegado para $displayName'),
-              ),
-            ),
-            onAccessDenied: () {
-              log('Acceso denegado para $_currentRole a $content');
-            },
-            child: Card(
-              color: Colors.green[100],
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text('Acceso permitido a $displayName'),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+/// Available resources for the demo dropdowns.
+const List<String> kDemoResources = <String>[
+  'dashboard',
+  'settings',
+  'users',
+  'reports',
+  'analytics',
+  'admin_panel',
+  'posts',
+  'drafts',
+  'published_content',
+  'team_content',
+];

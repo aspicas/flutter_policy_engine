@@ -1,292 +1,261 @@
-# Flutter Policy Engine
+# flutter_policy_engine
 
-[![Pub Version](https://img.shields.io/pub/v/flutter_policy_engine)](https://pub.dev/packages/flutter_policy_engine)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Flutter](https://img.shields.io/badge/Flutter-3.4.1+-blue.svg)](https://flutter.dev)
+A lightweight, extensible policy engine for Flutter that supports **Role-Based
+Access Control (RBAC)** and basic **Attribute-Based Access Control (ABAC)** with
+Clean Architecture, injectable logging, and optional persistent storage.
 
-A lightweight, extensible policy engine for Flutter applications. Define, manage, and evaluate access control rules declaratively using **ABAC** (Attribute-Based Access Control) or **RBAC** (Role-Based Access Control) models with a clean, intuitive API.
-
-## ✨ Features
-
-- **🔐 Dual Access Control Models**: Support for both Role-Based (RBAC) and Attribute-Based (ABAC) access control
-- **🎯 Declarative Policy Definitions**: Define access rules using simple, readable configurations
-- **📁 JSON Asset Loading**: Load policies from external JSON files bundled with your app
-- **🏗️ Modular Architecture**: Extensible design with clear separation of concerns
-- **⚡ Lightweight & Fast**: Minimal overhead with efficient policy evaluation
-- **🔄 Real-time Updates**: Dynamic policy updates without app restarts
-- **🎨 Flutter-Native**: Built specifically for Flutter with widget integration
-- **📱 Easy Integration**: Simple setup with minimal boilerplate code
-- **🧪 Comprehensive Testing**: Full test coverage with examples
-- **🛡️ Robust Error Handling**: Structured exception handling with detailed context
-
-## 🚀 Quick Start
-
-### Installation
-
-Add the package to your `pubspec.yaml`:
-
-```yaml
-dependencies:
-  flutter_policy_engine: ^1.1.0
-```
-
-Run the installation:
-
-```bash
-flutter pub get
-```
-
-### Basic Usage
-
-```dart
-import 'package:flutter/material.dart';
-import 'package:flutter_policy_engine/flutter_policy_engine.dart';
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize policy manager
-  final policyManager = PolicyManager();
-  await policyManager.initialize({
-    "admin": ["dashboard", "users", "settings", "reports"],
-    "manager": ["dashboard", "users", "reports"],
-    "user": ["dashboard"],
-    "guest": ["login"]
-  });
-
-  runApp(MyApp(policyManager: policyManager));
-}
-
-class MyApp extends StatelessWidget {
-  final PolicyManager policyManager;
-
-  const MyApp({super.key, required this.policyManager});
-
-  @override
-  Widget build(BuildContext context) {
-    return PolicyProvider(
-      policyManager: policyManager,
-      child: MaterialApp(
-        title: 'Policy Engine Demo',
-        home: HomePage(),
-      ),
-    );
-  }
-}
-
-class HomePage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Dashboard')),
-      body: Column(
-        children: [
-          // Only show for admin and manager roles
-          PolicyWidget(
-            role: "admin",
-            content: "users",
-            child: UserManagementCard(),
-            fallback: AccessDeniedWidget(),
-          ),
-
-          // Show for all authenticated users
-          PolicyWidget(
-            role: "user",
-            content: "dashboard",
-            child: DashboardCard(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-```
-
-### Loading Policies from JSON Assets
-
-You can also load policies from JSON files bundled with your app:
-
-```dart
-// Add to pubspec.yaml
-flutter:
-  assets:
-    - assets/policies/
-
-// Create assets/policies/user_roles.json
-{
-  "admin": {
-    "allowedContent": ["dashboard", "users", "settings", "reports"]
-  },
-  "manager": {
-    "allowedContent": ["dashboard", "users", "reports"]
-  },
-  "user": {
-    "allowedContent": ["dashboard"]
-  }
-}
-
-// Initialize from JSON asset
-final policyManager = PolicyManager();
-await policyManager.initializeFromJsonAssets('assets/policies/user_roles.json');
-```
-
-## 📚 Core Concepts
-
-### Policy Manager
-
-The central orchestrator that manages all access control logic:
-
-```dart
-final policyManager = PolicyManager();
-
-// Initialize with role definitions
-await policyManager.initialize({
-  "admin": ["dashboard", "users", "settings"],
-  "user": ["dashboard"],
-});
-
-// Check access programmatically
-bool hasAccess = policyManager.evaluateAccess("admin", "users"); // true
-bool canAccess = policyManager.evaluateAccess("user", "settings"); // false
-```
-
-### Policy Widget
-
-Conditionally render content based on user roles:
-
-```dart
-PolicyWidget(
-  role: "admin",
-  content: "settings",
-  child: SettingsPage(),
-  fallback: AccessDeniedWidget(),
-)
-```
-
-### Role Management
-
-Create and manage roles dynamically:
-
-```dart
-// Add a new role
-await policyManager.addRole("moderator", ["dashboard", "comments"]);
-
-// Update existing role
-await policyManager.updateRole("user", ["dashboard", "profile"]);
-
-// Remove a role
-await policyManager.removeRole("guest");
-```
-
-## 🧪 Testing
-
-### Local Testing
-
-Run tests with coverage:
-
-```bash
-# Using the provided script (recommended)
-./scripts/test_with_coverage.sh
-
-# Or manually
-fvm flutter test --coverage
-lcov --summary coverage/lcov.info
-genhtml coverage/lcov.info -o coverage/html
-open coverage/html/index.html
-```
-
-### GitHub Actions Testing
-
-Test GitHub Actions workflows locally before pushing to GitHub:
-
-```bash
-# Install dependencies (first time only)
-./scripts/install_dependencies.sh
-
-# Test a specific workflow
-./scripts/test_github_actions.sh -w .github/workflows/check-commits.yml --dry-run
-
-# List available workflows
-./scripts/test_github_actions.sh --list-workflows
-
-# Test with verbose output
-./scripts/test_github_actions.sh -w .github/workflows/main-branch-pipeline.yml -v
-```
-
-**Features:**
-
-- 🐳 Docker-based local testing with `act`
-- 🔍 Workflow validation and syntax checking
-- 🧪 Dry-run mode for safe testing
-- 📋 Comprehensive workflow coverage
-- 🛠️ Automatic dependency management
-
-For detailed usage, see [GitHub Actions Testing Guide](scripts/README.md).
-
-### Example App
-
-Explore the interactive example app with multiple demos:
-
-```bash
-cd example
-flutter run
-```
-
-The example includes:
-
-#### 🎯 Basic Policy Demo
-
-- Core policy evaluation demonstrations
-- Real-time access control testing
-- Widget-based permission checking
-
-#### 👥 Role Management Demo
-
-- Dynamic role creation and modification
-- Interactive role testing interface
-- Real-time policy updates
-
-#### 📁 JSON Assets Demo
-
-- Loading policies from external JSON files
-- Asset-based configuration management
-- Comprehensive permission testing
-
-## 📚 Documentation
-
-- **[Quick Start Guide](docs/quick-start.mdx)** - Get up and running in minutes
-- **[Core Concepts](docs/core-concepts/)** - Deep dive into policy management
-- **[Examples](docs/examples/)** - Practical usage examples
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-### Development Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/aspicas/flutter_policy_engine.git
-cd flutter_policy_engine
-
-# Run the setup script
-./setup.sh
-
-# Run tests
-./scripts/test_with_coverage.sh
-```
-
-### Code Style
-
-- Follow the existing code patterns and style
-- Write clear commit messages (Commitlint enabled)
-- Add tests for new features
-- Ensure all tests pass before submitting PRs
-
-## 📄 License
-
-MIT © 2025 David Alejandro Garcia Ruiz
+[![pub package](https://img.shields.io/pub/v/flutter_policy_engine.svg)](https://pub.dev/packages/flutter_policy_engine)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
 
-> **💡 Tip**: If you use VSCode, restart your terminal after setup to ensure FVM is properly detected.
+## Features
+
+- **RBAC** — map roles to allowed resources; deny by default.
+- **ABAC** — match subject/resource attributes against declarative rules.
+- **Composite evaluation** — combine RBAC + ABAC with `denyOverrides`,
+  `allowOverrides`, or `anyOf` strategies.
+- **Injectable logger** — `ILogger` port with `ConsoleLogger` and `NoopLogger`
+  adapters.
+- **Flexible storage** — `InMemoryPolicyRepository` (default) or
+  `SharedPreferencesPolicyRepository` for persistence across restarts.
+- **Flutter asset loading** — load policies from a bundled JSON asset via
+  `FlutterAssetLoader`.
+- **Reactive widgets** — `PolicyEngineScope`, `PolicyGate`, and `PolicyBuilder`
+  integrate with the widget tree and rebuild automatically on policy changes.
+- **Zero global state** — all state is owned by `PolicyEngineController`.
+
+---
+
+## Quick start
+
+### 1. Add the dependency
+
+```yaml
+dependencies:
+  flutter_policy_engine: ^2.0.0
+```
+
+### 2. Define policies inline (RBAC)
+
+```dart
+import 'package:flutter_policy_engine/flutter_policy_engine.dart';
+
+Future<void> main() async {
+  final controller = PolicyEngineController.inMemory();
+
+  await controller.loadPolicies({
+    'roles': {
+      'admin':  {'allowedResources': ['dashboard', 'settings', 'users']},
+      'viewer': {'allowedResources': ['dashboard']},
+      'guest':  {'allowedResources': []},
+    },
+  });
+
+  final result = await controller.evaluateAccess('admin', 'settings');
+  result.when(
+    ok:  (decision) => print('Granted: ${decision.isGranted}'),
+    err: (failure)  => print('Error: ${failure.message}'),
+  );
+}
+```
+
+### 3. Wrap the widget tree
+
+```dart
+PolicyEngineScope(
+  controller: PolicyEngineController.inMemory(),
+  child: MyApp(),
+)
+```
+
+### 4. Gate content
+
+```dart
+PolicyGate(
+  roleName: 'admin',
+  resourceId: 'settings',
+  child: const SettingsScreen(),
+  fallback: const Text('Access denied'),
+)
+```
+
+### 5. Build conditionally
+
+```dart
+PolicyBuilder(
+  roleName: currentUser.role,
+  resourceId: 'reports',
+  builder: (context, decision) {
+    if (decision == null) return const CircularProgressIndicator();
+    return decision.isGranted ? const ReportsScreen() : const UpgradePrompt();
+  },
+)
+```
+
+---
+
+## Loading policies from a JSON asset
+
+Create an asset following the **v2 canonical schema**:
+
+```json
+{
+  "roles": {
+    "admin":  { "allowedResources": ["dashboard", "settings"] },
+    "viewer": { "allowedResources": ["dashboard"] }
+  }
+}
+```
+
+Then load it at startup:
+
+```dart
+final controller = PolicyEngineController.withRepository(
+  repository: InMemoryPolicyRepository(),
+  assetLoader: const FlutterAssetLoader(),
+);
+
+await controller.loadPoliciesFromAsset('assets/policies/roles.json');
+```
+
+---
+
+## ABAC example
+
+```dart
+import 'package:flutter_policy_engine/flutter_policy_engine.dart';
+
+Future<void> main() async {
+  // ABAC policy: only subjects from 'eu' region may access 'gdpr_data'.
+  final abacPolicy = AbacPolicy(
+    rules: const [
+      AttributeRule(
+        subjectAttribute: 'region',
+        requiredValue: 'eu',
+        resourceId: 'gdpr_data',
+      ),
+    ],
+  );
+
+  final evaluator = CompositeEvaluator(
+    evaluators: [
+      const RbacEvaluator(),
+      AbacEvaluator(policy: abacPolicy),
+    ],
+    strategy: CompositeStrategy.denyOverrides,
+  );
+
+  final repository = InMemoryPolicyRepository();
+  await repository.save(
+    Policy(
+      roles: {
+        'analyst': RoleEntity(
+          name: RoleName('analyst'),
+          allowedResources: const {'gdpr_data'},
+        ),
+      },
+    ),
+  );
+
+  final euSubject = Subject(
+    id: 'alice',
+    attributes: const {'region': 'eu'},
+  );
+  final resource = Resource(id: 'gdpr_data');
+
+  final decision = await evaluator.evaluate(
+    await repository.load().then((r) => r.getOrElse(const Policy(roles: {}))),
+    'analyst',
+    resource.id,
+    subject: euSubject,
+    resource: resource,
+  );
+
+  print(decision.isGranted); // true
+}
+```
+
+---
+
+## Persistent storage
+
+```dart
+final prefs = await SharedPreferences.getInstance();
+final repo   = SharedPreferencesPolicyRepository(prefs);
+
+final controller = PolicyEngineController.withRepository(
+  repository: repo,
+  assetLoader: const FlutterAssetLoader(),
+);
+
+// Loads persisted policy if available, otherwise loads from asset.
+final stored = await repo.load();
+if (stored.getOrElse(const Policy(roles: {})).isEmpty) {
+  await controller.loadPoliciesFromAsset('assets/policies/roles.json');
+}
+```
+
+---
+
+## Role management
+
+```dart
+// Add a role
+await controller.addRole(
+  RoleEntity(
+    name: RoleName('editor'),
+    allowedResources: const {'posts', 'drafts'},
+  ),
+);
+
+// Update a role
+await controller.updateRole(
+  'editor',
+  RoleEntity(
+    name: RoleName('editor'),
+    allowedResources: const {'posts', 'drafts', 'published'},
+  ),
+);
+
+// Remove a role
+await controller.removeRole('editor');
+
+// List all roles
+final result = await controller.listRoles();
+```
+
+---
+
+## Architecture
+
+```
+lib/src/
+  domain/          ← pure Dart — entities, value objects, evaluators, failures
+  application/     ← use cases, PolicyEngine facade, ILogger / IAssetLoader ports
+  infrastructure/  ← ConsoleLogger, NoopLogger, InMemoryPolicyRepository,
+                     SharedPreferencesPolicyRepository, FlutterAssetLoader,
+                     PolicyJsonCodec
+  presentation/    ← PolicyEngineController, PolicyEngineScope,
+                     PolicyGate, PolicyBuilder
+```
+
+Key design decisions:
+- **No global state** — `PolicyEngineController` owns all mutable state.
+- **Result<T, DomainFailure>** — no exceptions escape the domain boundary.
+- **InheritedNotifier** — `PolicyEngineScope` rebuilds dependants automatically
+  (fixes the v1 `PolicyProvider` rebuild bug).
+- **Explicit DI** — no service locator or code generation required.
+
+---
+
+## Migrating from v1
+
+See [docs/migration-v1-to-v2.md](docs/migration-v1-to-v2.md) for the full
+mapping table with before/after examples.
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
