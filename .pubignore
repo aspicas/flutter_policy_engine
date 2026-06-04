@@ -16,6 +16,9 @@ windows/
 node_modules/
 scripts/
 
+# Repo documentation (docs.page, ADRs, specs) — not part of the pub package
+docs/
+
 # Temp / secrets
 *.log
 *.tmp
