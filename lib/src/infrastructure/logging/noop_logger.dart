@@ -1,6 +1,8 @@
 import 'package:flutter_policy_engine/src/application/ports/i_logger.dart';
-import 'package:flutter_policy_engine/src/application/services/policy_engine.dart' show PolicyEngine;
-import 'package:flutter_policy_engine/src/infrastructure/logging/console_logger.dart' show ConsoleLogger;
+import 'package:flutter_policy_engine/src/application/services/policy_engine.dart'
+    show PolicyEngine;
+import 'package:flutter_policy_engine/src/infrastructure/logging/console_logger.dart'
+    show ConsoleLogger;
 import 'package:meta/meta.dart';
 
 /// A no-operation [ILogger] that discards all log messages.

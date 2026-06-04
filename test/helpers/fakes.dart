@@ -6,7 +6,8 @@
 /// any test file that uses `mocktail` with custom domain types.
 library fakes;
 
-import 'package:flutter_policy_engine/src/application/ports/i_asset_loader.dart' show IAssetLoader;
+import 'package:flutter_policy_engine/src/application/ports/i_asset_loader.dart'
+    show IAssetLoader;
 import 'package:flutter_policy_engine/src/application/ports/i_asset_loader.dart';
 import 'package:flutter_policy_engine/src/domain/entities/access_decision.dart';
 import 'package:flutter_policy_engine/src/domain/entities/policy.dart';

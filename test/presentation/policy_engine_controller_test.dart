@@ -59,8 +59,7 @@ void main() {
       });
       final result = await controller.evaluateAccess('admin', 'dashboard');
       expect(result.isOk, isTrue);
-      final decision =
-          (result as Ok<AccessDecision, DomainFailure>).value;
+      final decision = (result as Ok<AccessDecision, DomainFailure>).value;
       expect(decision.isGranted, isTrue);
     });
 

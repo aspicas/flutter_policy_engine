@@ -14,8 +14,7 @@ void main() {
 
   group('AbacEvaluator — granted', () {
     test('grants when all rules satisfied', () {
-      const subject =
-          Subject(attributes: {'role': 'admin', 'region': 'eu'});
+      const subject = Subject(attributes: {'role': 'admin', 'region': 'eu'});
       final resource =
           Resource(id: 'report-eu', attributes: const {'region': 'eu'});
       const abacPolicy = AbacPolicy(
@@ -110,8 +109,7 @@ void main() {
     });
 
     test('denies on first failing rule (short-circuit)', () {
-      const subject =
-          Subject(attributes: {'role': 'admin', 'region': 'us'});
+      const subject = Subject(attributes: {'role': 'admin', 'region': 'us'});
       final resource =
           Resource(id: 'report-eu', attributes: const {'region': 'eu'});
       const policy = AbacPolicy(

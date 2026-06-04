@@ -68,10 +68,12 @@ void main() {
         await repo.save(_buildPolicy());
         final loaded = (await repo.load()).getOrElse(const Policy(roles: {}));
 
-        given('unmodifiable loaded roles').when(
+        given('unmodifiable loaded roles')
+            .when(
           'attempting to mutate',
           () => loaded.roles.keys.toList(),
-        ).then('roles are accessible but not mutable', (keys) {
+        )
+            .then('roles are accessible but not mutable', (keys) {
           expect(keys, contains('admin'));
           expect(
             () => loaded.roles['x'] = RoleEntity(
@@ -90,10 +92,12 @@ void main() {
           'When loading, Then empty policy is returned', () async {
         final repo = InMemoryPolicyRepository();
 
-        await given('fresh empty repository').whenAsync(
+        await given('fresh empty repository')
+            .whenAsync(
           'loading',
           repo.load,
-        ).then('empty policy', (result) {
+        )
+            .then('empty policy', (result) {
           expect(result.isOk, isTrue);
           expect(result.getOrElse(const Policy(roles: {})).isEmpty, isTrue);
         });
@@ -127,10 +131,12 @@ void main() {
           ),
         );
 
-        await given('second save with different policy').whenAsync(
+        await given('second save with different policy')
+            .whenAsync(
           'loading',
           repo.load,
-        ).then('only second save data is present', (result) {
+        )
+            .then('only second save data is present', (result) {
           final policy = result.getOrElse(const Policy(roles: {}));
           expect(policy.roleFor('a'), isNull);
           expect(policy.roleFor('b'), isNotNull);

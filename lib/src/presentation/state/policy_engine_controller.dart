@@ -8,7 +8,8 @@ import 'package:flutter_policy_engine/src/domain/failures/domain_failure.dart';
 import 'package:flutter_policy_engine/src/domain/repositories/i_policy_repository.dart';
 import 'package:flutter_policy_engine/src/infrastructure/logging/noop_logger.dart';
 import 'package:flutter_policy_engine/src/infrastructure/storage/in_memory_policy_repository.dart';
-import 'package:flutter_policy_engine/src/presentation/providers/policy_engine_scope.dart' show PolicyEngineScope;
+import 'package:flutter_policy_engine/src/presentation/providers/policy_engine_scope.dart'
+    show PolicyEngineScope;
 
 /// Mutable state controller for the policy engine.
 ///

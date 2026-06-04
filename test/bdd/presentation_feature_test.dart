@@ -181,8 +181,7 @@ void main() {
                 textDirection: TextDirection.ltr,
               ),
               onDenied: (f) => failure = f,
-              child:
-                  const Text('ok', textDirection: TextDirection.ltr),
+              child: const Text('ok', textDirection: TextDirection.ltr),
             ),
           ),
         );

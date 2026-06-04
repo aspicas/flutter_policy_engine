@@ -53,8 +53,10 @@ void main() {
         )
             .then('ParseFailure is returned', (result) {
           expect(result.isErr, isTrue);
-          expect((result as Err<Policy, DomainFailure>).error,
-              isA<ParseFailure>(),);
+          expect(
+            (result as Err<Policy, DomainFailure>).error,
+            isA<ParseFailure>(),
+          );
         });
       });
     });

@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_policy_engine/src/application/ports/i_asset_loader.dart';
-import 'package:flutter_policy_engine/src/application/use_cases/load_policies_from_asset.dart' show LoadPoliciesFromAsset;
+import 'package:flutter_policy_engine/src/application/use_cases/load_policies_from_asset.dart'
+    show LoadPoliciesFromAsset;
 import 'package:flutter_policy_engine/src/domain/failures/domain_failure.dart';
 
 /// An [IAssetLoader] that reads Flutter asset bundle files via [rootBundle].

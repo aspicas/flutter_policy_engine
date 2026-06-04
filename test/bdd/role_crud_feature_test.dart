@@ -26,8 +26,7 @@ void main() {
     repository = _MockRepository();
     when(() => repository.load())
         .thenAnswer((_) async => const Ok(Policy(roles: {})));
-    when(() => repository.save(any()))
-        .thenAnswer((_) async => const Ok(null));
+    when(() => repository.save(any())).thenAnswer((_) async => const Ok(null));
   });
 
   group('Feature: Role CRUD (spec-004)', () {
@@ -41,10 +40,12 @@ void main() {
           allowedResources: const {'dashboard'},
         );
 
-        await given('empty repository').whenAsync(
+        await given('empty repository')
+            .whenAsync(
           'adding admin role',
           () => useCase.call(role),
-        ).then('result is Ok and save was called', (result) {
+        )
+            .then('result is Ok and save was called', (result) {
           expect(result.isOk, isTrue);
           verify(() => repository.save(any())).called(1);
         });
@@ -57,10 +58,12 @@ void main() {
           'When removing, Then InvalidPolicyFailure is returned', () async {
         final useCase = RemoveRole(repository: repository);
 
-        await given('empty role name for removal').whenAsync(
+        await given('empty role name for removal')
+            .whenAsync(
           'calling remove with empty string',
           () => useCase.call(''),
-        ).then('InvalidPolicyFailure is returned', (result) {
+        )
+            .then('InvalidPolicyFailure is returned', (result) {
           expect(result.isErr, isTrue);
           expect((result as Err).error, isA<InvalidPolicyFailure>());
         });
@@ -73,10 +76,12 @@ void main() {
           'When removing it, Then Ok is returned', () async {
         final useCase = RemoveRole(repository: repository);
 
-        await given('non-existent role ghost').whenAsync(
+        await given('non-existent role ghost')
+            .whenAsync(
           'removing ghost',
           () => useCase.call('ghost'),
-        ).then('result is Ok (no-op)', (result) {
+        )
+            .then('result is Ok (no-op)', (result) {
           expect(result.isOk, isTrue);
         });
       });
@@ -88,10 +93,12 @@ void main() {
           'When listing roles, Then empty list is returned', () async {
         final useCase = ListRoles(repository: repository);
 
-        await given('empty repository').whenAsync(
+        await given('empty repository')
+            .whenAsync(
           'listing roles',
           useCase.call,
-        ).then('empty list is returned', (result) {
+        )
+            .then('empty list is returned', (result) {
           expect(result.isOk, isTrue);
           final roles = (result as Ok).value as List<RoleEntity>;
           expect(roles, isEmpty);
@@ -123,10 +130,12 @@ void main() {
           allowedResources: const {'dashboard', 'reports'},
         );
 
-        await given('admin role with only dashboard').whenAsync(
+        await given('admin role with only dashboard')
+            .whenAsync(
           'updating admin to add reports',
           () => useCase.call('admin', updated),
-        ).then('result is Ok and save was called', (result) {
+        )
+            .then('result is Ok and save was called', (result) {
           expect(result.isOk, isTrue);
           verify(() => repository.save(any())).called(1);
         });

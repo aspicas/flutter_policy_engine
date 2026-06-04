@@ -2,7 +2,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_policy_engine/src/domain/entities/access_decision.dart';
 import 'package:flutter_policy_engine/src/domain/failures/domain_failure.dart';
 import 'package:flutter_policy_engine/src/presentation/providers/policy_engine_scope.dart';
-import 'package:flutter_policy_engine/src/presentation/widgets/policy_gate.dart' show PolicyGate;
+import 'package:flutter_policy_engine/src/presentation/widgets/policy_gate.dart'
+    show PolicyGate;
 
 /// Builder callback providing the access [decision] to the widget.
 ///

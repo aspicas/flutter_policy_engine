@@ -14,8 +14,7 @@ import 'package:flutter_policy_engine/src/presentation/state/policy_engine_contr
 ///   child: MyApp(),
 /// )
 /// ```
-class PolicyEngineScope
-    extends InheritedNotifier<PolicyEngineController> {
+class PolicyEngineScope extends InheritedNotifier<PolicyEngineController> {
   /// Creates a [PolicyEngineScope] that provides [controller] to descendants.
   const PolicyEngineScope({
     required PolicyEngineController controller,
@@ -28,8 +27,8 @@ class PolicyEngineScope
   /// Subscribes the calling context to rebuild notifications. Throws a
   /// [FlutterError] if no [PolicyEngineScope] is found in the tree.
   static PolicyEngineController of(BuildContext context) {
-    final scope = context
-        .dependOnInheritedWidgetOfExactType<PolicyEngineScope>();
+    final scope =
+        context.dependOnInheritedWidgetOfExactType<PolicyEngineScope>();
     if (scope == null) {
       throw FlutterError(
         'PolicyEngineScope.of() called with a context that does not contain a '
@@ -45,8 +44,6 @@ class PolicyEngineScope
   /// Use this when you need the controller but do not want the context to
   /// rebuild when the controller notifies listeners.
   static PolicyEngineController? maybeOf(BuildContext context) {
-    return context
-        .getInheritedWidgetOfExactType<PolicyEngineScope>()
-        ?.notifier;
+    return context.getInheritedWidgetOfExactType<PolicyEngineScope>()?.notifier;
   }
 }

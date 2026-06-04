@@ -11,10 +11,12 @@ void main() {
       test(
           'Given Ok(42), '
           'When accessing value, Then 42 is returned', () {
-        given('Ok(42)').when(
+        given('Ok(42)')
+            .when(
           'accessing value',
           () => const Ok<int, DomainFailure>(42),
-        ).then('value is 42', (result) {
+        )
+            .then('value is 42', (result) {
           expect(result.isOk, isTrue);
           expect(result.getOrElse(0), equals(42));
         });
@@ -25,12 +27,14 @@ void main() {
       test(
           'Given Err with PolicyNotFoundFailure, '
           'When inspecting, Then isErr is true and failure matches', () {
-        given('Err(PolicyNotFoundFailure)').when(
+        given('Err(PolicyNotFoundFailure)')
+            .when(
           'creating error result',
           () => const Err<int, DomainFailure>(
             PolicyNotFoundFailure('test failure'),
           ),
-        ).then('isErr is true and error type matches', (result) {
+        )
+            .then('isErr is true and error type matches', (result) {
           expect(result.isErr, isTrue);
           expect((result as Err).error, isA<PolicyNotFoundFailure>());
         });
@@ -41,11 +45,13 @@ void main() {
       test(
           'Given Err result, '
           'When calling getOrElse(99), Then 99 is returned', () {
-        given('Err result').when(
+        given('Err result')
+            .when(
           'calling getOrElse with fallback',
           () => const Err<int, DomainFailure>(PolicyNotFoundFailure('x'))
               .getOrElse(99),
-        ).then('fallback 99 is returned', (value) {
+        )
+            .then('fallback 99 is returned', (value) {
           expect(value, equals(99));
         });
       });
@@ -66,7 +72,8 @@ void main() {
         ];
 
         for (final failure in failures) {
-          given('a ${failure.runtimeType}').when(
+          given('a ${failure.runtimeType}')
+              .when(
             'matching exhaustively',
             () => switch (failure) {
               PolicyNotFoundFailure() => 'not_found',
@@ -77,7 +84,8 @@ void main() {
               EngineNotInitializedFailure() => 'not_initialized',
               MissingAttributeFailure() => 'missing_attribute',
             },
-          ).then('a non-empty label is returned', (label) {
+          )
+              .then('a non-empty label is returned', (label) {
             expect(label, isNotEmpty);
           });
         }
@@ -88,10 +96,12 @@ void main() {
       test(
           'Given EngineNotInitializedFailure, '
           'When reading message, Then it is descriptive', () {
-        given('EngineNotInitializedFailure').when(
+        given('EngineNotInitializedFailure')
+            .when(
           'reading message',
           () => const EngineNotInitializedFailure(),
-        ).then('message is non-empty', (failure) {
+        )
+            .then('message is non-empty', (failure) {
           expect(failure.message, isNotEmpty);
         });
       });

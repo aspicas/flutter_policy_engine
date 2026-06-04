@@ -27,7 +27,6 @@ const _inlinePolicy = <String, dynamic>{
 };
 
 void main() {
-
   group('E2E — Basic RBAC evaluation', () {
     testWidgets('admin can access settings', (tester) async {
       final controller = PolicyEngineController.inMemory();
@@ -36,7 +35,8 @@ void main() {
 
       final result = await controller.evaluateAccess('admin', 'settings');
       expect(result.isOk, isTrue);
-      expect((result as Ok<AccessDecision, DomainFailure>).value.isGranted, isTrue);
+      expect((result as Ok<AccessDecision, DomainFailure>).value.isGranted,
+          isTrue);
     });
 
     testWidgets('viewer is denied settings access', (tester) async {
@@ -46,7 +46,8 @@ void main() {
 
       final result = await controller.evaluateAccess('viewer', 'settings');
       expect(result.isOk, isTrue);
-      expect((result as Ok<AccessDecision, DomainFailure>).value.isGranted, isFalse);
+      expect((result as Ok<AccessDecision, DomainFailure>).value.isGranted,
+          isFalse);
     });
 
     testWidgets('unknown role is denied', (tester) async {
@@ -56,7 +57,8 @@ void main() {
 
       final result = await controller.evaluateAccess('hacker', 'settings');
       expect(result.isOk, isTrue);
-      expect((result as Ok<AccessDecision, DomainFailure>).value.isGranted, isFalse);
+      expect((result as Ok<AccessDecision, DomainFailure>).value.isGranted,
+          isFalse);
     });
 
     testWidgets(
@@ -168,8 +170,7 @@ void main() {
           .loadPoliciesFromAsset('assets/policies/user_roles.json');
       expect(result.isOk, isTrue);
 
-      final adminResult =
-          await controller.evaluateAccess('admin', 'dashboard');
+      final adminResult = await controller.evaluateAccess('admin', 'dashboard');
       expect(
         (adminResult as Ok<AccessDecision, DomainFailure>).value.isGranted,
         isTrue,
@@ -206,11 +207,10 @@ void main() {
       required Subject subject,
       required AbacPolicy abacPolicy,
     }) {
-      final rbac = const RbacEvaluator()
-          .evaluate(roleName, resource.id, policy);
+      final rbac =
+          const RbacEvaluator().evaluate(roleName, resource.id, policy);
       if (rbac.isDenied) return rbac;
-      return const AbacEvaluator()
-          .evaluate(subject, resource, abacPolicy);
+      return const AbacEvaluator().evaluate(subject, resource, abacPolicy);
     }
 
     testWidgets('subject with matching region attribute is granted',
@@ -236,8 +236,7 @@ void main() {
         ),
       );
 
-      final policy =
-          (await repo.load()).getOrElse(const Policy(roles: {}));
+      final policy = (await repo.load()).getOrElse(const Policy(roles: {}));
       const euSubject = Subject(
         attributes: {'region': 'eu'},
       );
@@ -277,8 +276,7 @@ void main() {
         ),
       );
 
-      final policy =
-          (await repo.load()).getOrElse(const Policy(roles: {}));
+      final policy = (await repo.load()).getOrElse(const Policy(roles: {}));
       const usSubject = Subject(
         attributes: {'region': 'us'},
       );

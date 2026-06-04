@@ -92,8 +92,11 @@ void main() {
             () => evaluator.evaluate('guest', resource, policy),
           )
               .then('access is denied', (decision) {
-            expect(decision.isDenied, isTrue,
-                reason: '$resource should be denied for guest',);
+            expect(
+              decision.isDenied,
+              isTrue,
+              reason: '$resource should be denied for guest',
+            );
           });
         }
       });

@@ -35,8 +35,7 @@ void main() {
     group('Scenario: ConsoleLogger respects minLevel filter', () {
       test(
           'Given ConsoleLogger with minLevel=error, '
-          'When info is called, Then it silently does nothing (no throw)',
-          () {
+          'When info is called, Then it silently does nothing (no throw)', () {
         const logger = ConsoleLogger(minLevel: LogLevel.error);
 
         given('ConsoleLogger at error level').when(

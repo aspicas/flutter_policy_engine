@@ -113,8 +113,7 @@ void main() {
           child: const PolicyGate(
             roleName: 'admin',
             resourceId: 'dashboard',
-            loading:
-                Text('Loading…', textDirection: TextDirection.ltr),
+            loading: Text('Loading…', textDirection: TextDirection.ltr),
             child: Text('Ready', textDirection: TextDirection.ltr),
           ),
         ),
@@ -137,8 +136,7 @@ void main() {
           child: PolicyGate(
             roleName: 'admin',
             resourceId: 'dashboard',
-            fallback:
-                const Text('denied', textDirection: TextDirection.ltr),
+            fallback: const Text('denied', textDirection: TextDirection.ltr),
             onDenied: (f) => failure = f,
             child: const Text('ok', textDirection: TextDirection.ltr),
           ),
