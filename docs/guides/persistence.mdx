@@ -1,0 +1,186 @@
+---
+title: Storage & Persistence
+description: In-memory, SharedPreferences, and custom policy repositories
+---
+
+# Storage & Persistence
+
+The controller reads and writes policies through an `IPolicyRepository`. The
+package ships two implementations, and you can provide your own.
+
+| Repository | Survives restarts | Use it for |
+|---|---|---|
+| `InMemoryPolicyRepository` | no | Apps that load policies at every startup. Also tests. This is the default for `PolicyEngineController.inMemory()`. |
+| `SharedPreferencesPolicyRepository` | yes | Keeping roles that were changed at runtime between app launches. |
+
+## In memory
+
+```dart
+final controller = PolicyEngineController.inMemory();
+
+// Or explicitly, optionally seeded with an initial policy:
+final repository = InMemoryPolicyRepository(
+  initialPolicy: Policy(
+    roles: {
+      'admin': RoleEntity(
+        name: RoleName('admin'),
+        allowedResources: const {'dashboard', 'settings'},
+      ),
+    },
+  ),
+);
+final seeded = PolicyEngineController.withRepository(repository: repository);
+```
+
+<Info>
+Seeding a repository doesn't initialize the controller. `evaluateAccess` still
+returns `EngineNotInitializedFailure` until `loadPolicies` or
+`loadPoliciesFromAsset` succeeds.
+</Info>
+
+## SharedPreferences
+
+`SharedPreferencesPolicyRepository` stores the policy as v2 JSON under the key
+`SharedPreferencesPolicyRepository.storageKey` (`'flutter_policy_engine_policies'`).
+Create it with the async factory:
+
+```dart
+final repository = await SharedPreferencesPolicyRepository.create();
+```
+
+### Restoring persisted policies at startup
+
+The controller only becomes initialized through a load call. Policies already in
+storage are not enough. On startup, seed from your asset the first time, and
+re-load the stored policy on later launches:
+
+```dart
+Future<PolicyEngineController> createController() async {
+  final repository = await SharedPreferencesPolicyRepository.create();
+  final controller = PolicyEngineController.withRepository(
+    repository: repository,
+    assetLoader: const FlutterAssetLoader(),
+  );
+
+  final stored = (await repository.load()).getOrElse(const Policy(roles: {}));
+
+  if (stored.isEmpty) {
+    // First launch: seed from the bundled policy file.
+    await controller.loadPoliciesFromAsset('assets/policies/roles.json');
+  } else {
+    // Later launches: re-load what was saved, which initializes the controller.
+    await controller.loadPolicies(policyToMap(stored));
+  }
+  return controller;
+}
+
+/// Converts a [Policy] back into the v2 schema map.
+Map<String, dynamic> policyToMap(Policy policy) => {
+      'roles': {
+        for (final MapEntry(:key, :value) in policy.roles.entries)
+          key: {'allowedResources': value.allowedResources.toList()},
+      },
+    };
+```
+
+<Warning>
+Without the `else` branch, a persisted app would deny everything after a restart,
+because the controller would never be initialized.
+</Warning>
+
+Every successful `addRole`, `updateRole`, and `removeRole` is saved immediately.
+To wipe stored policies, call `repository.clear()`.
+
+## Writing your own repository
+
+Implement the three methods of `IPolicyRepository`:
+
+```dart
+abstract interface class IPolicyRepository {
+  Future<Result<void, DomainFailure>> save(Policy policy);
+  Future<Result<Policy, DomainFailure>> load();
+  Future<Result<void, DomainFailure>> clear();
+}
+```
+
+Contract every implementation must follow:
+
+- `load()` returns `Ok(Policy(roles: {}))` when nothing has been saved yet, not
+  an error.
+- `save()` replaces the whole stored policy.
+- Never throw. Wrap I/O errors in `Err(StorageFailure(message, cause: e))`.
+
+Example: a repository that delegates raw JSON storage to callbacks you supply,
+such as secure storage, a file, or a remote config service:
+
+```dart
+import 'dart:convert';
+
+import 'package:flutter_policy_engine/flutter_policy_engine.dart';
+
+final class JsonCallbackPolicyRepository implements IPolicyRepository {
+  JsonCallbackPolicyRepository({required this.read, required this.write});
+
+  /// Returns the stored JSON, or null when nothing is stored.
+  final Future<String?> Function() read;
+
+  /// Stores [json], or deletes the stored value when [json] is null.
+  final Future<void> Function(String? json) write;
+
+  @override
+  Future<Result<void, DomainFailure>> save(Policy policy) async {
+    try {
+      await write(jsonEncode(_encode(policy)));
+      return const Ok(null);
+    } catch (e) {
+      return Err(StorageFailure('Failed to save policies', cause: e));
+    }
+  }
+
+  @override
+  Future<Result<Policy, DomainFailure>> load() async {
+    try {
+      final json = await read();
+      if (json == null) return const Ok(Policy(roles: {}));
+      return Ok(_decode(jsonDecode(json) as Map<String, dynamic>));
+    } catch (e) {
+      return Err(StorageFailure('Failed to load policies', cause: e));
+    }
+  }
+
+  @override
+  Future<Result<void, DomainFailure>> clear() async {
+    try {
+      await write(null);
+      return const Ok(null);
+    } catch (e) {
+      return Err(StorageFailure('Failed to clear policies', cause: e));
+    }
+  }
+
+  static Map<String, dynamic> _encode(Policy policy) => {
+        'roles': {
+          for (final MapEntry(:key, :value) in policy.roles.entries)
+            key: {'allowedResources': value.allowedResources.toList()},
+        },
+      };
+
+  static Policy _decode(Map<String, dynamic> json) {
+    final roles = json['roles'] as Map<String, dynamic>;
+    return Policy(
+      roles: {
+        for (final MapEntry(:key, :value) in roles.entries)
+          key: RoleEntity(
+            name: RoleName(key),
+            allowedResources: {
+              ...((value as Map<String, dynamic>)['allowedResources'] as List)
+                  .whereType<String>(),
+            },
+          ),
+      },
+    );
+  }
+}
+```
+
+Plug it in with `PolicyEngineController.withRepository(repository: ...)`.

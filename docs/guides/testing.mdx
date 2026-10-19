@@ -1,0 +1,157 @@
+---
+title: Testing
+description: Unit-test policies and widget-test gated UI
+---
+
+# Testing
+
+Use the real engine with in-memory storage in your tests. It is fast, has no
+platform dependencies, and avoids mocks.
+
+## Unit-testing policies
+
+```dart
+import 'package:flutter_policy_engine/flutter_policy_engine.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+const policies = <String, dynamic>{
+  'roles': {
+    'admin': {'allowedResources': ['dashboard', 'settings']},
+    'viewer': {'allowedResources': ['dashboard']},
+  },
+};
+
+void main() {
+  late PolicyEngineController controller;
+
+  setUp(() async {
+    controller = PolicyEngineController.inMemory();
+    await controller.loadPolicies(policies);
+  });
+
+  tearDown(() => controller.dispose());
+
+  Future<bool> isGranted(String role, String resource) async =>
+      (await controller.evaluateAccess(role, resource))
+          .mapOk((decision) => decision.isGranted)
+          .getOrElse(false);
+
+  test('admin can open settings', () async {
+    expect(await isGranted('admin', 'settings'), isTrue);
+  });
+
+  test('viewer cannot open settings', () async {
+    expect(await isGranted('viewer', 'settings'), isFalse);
+  });
+
+  test('unknown roles are denied with PolicyNotFoundFailure', () async {
+    final result = await controller.evaluateAccess('intruder', 'dashboard');
+    final decision = (result as Ok<AccessDecision, DomainFailure>).value;
+    expect(decision.failure, isA<PolicyNotFoundFailure>());
+  });
+}
+```
+
+A good habit is to load your **production** policy file in a test and assert the
+access matrix you expect. That catches accidental permission changes in code
+review.
+
+## Widget-testing gated UI
+
+`PolicyGate` and `PolicyBuilder` evaluate asynchronously, so pump until the
+evaluation settles before asserting:
+
+```dart
+testWidgets('settings entry is hidden for viewers', (tester) async {
+  final controller = PolicyEngineController.inMemory();
+  addTearDown(controller.dispose);
+  await controller.loadPolicies(policies);
+
+  await tester.pumpWidget(
+    PolicyEngineScope(
+      controller: controller,
+      child: const MaterialApp(
+        home: PolicyGate(
+          roleName: 'viewer',
+          resourceId: 'settings',
+          fallback: Text('denied'),
+          child: Text('settings'),
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+
+  expect(find.text('settings'), findsNothing);
+  expect(find.text('denied'), findsOneWidget);
+});
+```
+
+Role changes re-render gated widgets automatically. Pump again after the
+mutation:
+
+```dart
+await controller.addRole(
+  RoleEntity(
+    name: RoleName('viewer'),
+    allowedResources: const {'dashboard', 'settings'},
+  ),
+);
+await tester.pumpAndSettle();
+
+expect(find.text('settings'), findsOneWidget);
+```
+
+## Faking asset loading
+
+To test `loadPoliciesFromAsset` without a real asset bundle, implement
+`IAssetLoader`:
+
+```dart
+final class FakeAssetLoader implements IAssetLoader {
+  const FakeAssetLoader(this.assets);
+
+  final Map<String, String> assets;
+
+  @override
+  Future<Result<String, DomainFailure>> load(String assetPath) async {
+    final content = assets[assetPath];
+    return content == null
+        ? Err(StorageFailure('Asset not found: $assetPath'))
+        : Ok(content);
+  }
+}
+
+final controller = PolicyEngineController.inMemory(
+  assetLoader: const FakeAssetLoader({
+    'assets/policies/roles.json':
+        '{"roles": {"admin": {"allowedResources": ["dashboard"]}}}',
+  }),
+);
+```
+
+## Testing with `SharedPreferences`
+
+`SharedPreferencesPolicyRepository` works in tests once the plugin is mocked:
+
+```dart
+setUp(() {
+  SharedPreferences.setMockInitialValues({});
+});
+
+test('roles persist across repository instances', () async {
+  final first = PolicyEngineController.withRepository(
+    repository: await SharedPreferencesPolicyRepository.create(),
+  );
+  addTearDown(first.dispose);
+  await first.loadPolicies(policies);
+
+  final reopened = await SharedPreferencesPolicyRepository.create();
+  final stored = (await reopened.load()).getOrElse(const Policy(roles: {}));
+  expect(stored.roleFor('admin'), isNotNull);
+});
+```
+
+Import `package:shared_preferences/shared_preferences.dart` in the test for
+`setMockInitialValues`, and add `shared_preferences` to your app's
+`dependencies`.

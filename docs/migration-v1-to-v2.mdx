@@ -1,3 +1,8 @@
+---
+title: Migrating from v1
+description: Map every v1 API to its v2 equivalent and upgrade step by step
+---
+
 # Migration Guide — v1 → v2
 
 This document maps every v1 public API symbol to its v2 equivalent and explains
@@ -16,7 +21,7 @@ the changes needed to upgrade.
 | `IPolicyStorage` / `MemoryPolicyStorage` | `IPolicyRepository` / `InMemoryPolicyRepository` | Renamed; returns `Result` |
 | `IPolicyEvaluator` / `RoleEvaluator` | `PolicyEvaluator` / `RbacEvaluator` | Domain interface + RBAC/ABAC/Composite |
 | `LogHandler` (static) | `ILogger` port + `ConsoleLogger` / `NoopLogger` | Injectable, no static state |
-| `JsonHandler` (static) | `PolicyJsonCodec` | Instance class; single v2 schema |
+| `JsonHandler` (static) | `loadPolicies` / `loadPoliciesFromAsset` | JSON decoding is internal; only the v2 schema is accepted |
 | `ExternalAssetHandler` | `FlutterAssetLoader` | Implements `IAssetLoader` port |
 | `PolicySDKException` | `DomainFailure` sealed class | Pattern-matched subtypes; no exceptions in domain |
 | `PolicyNotInitializedException` | `EngineNotInitializedFailure` | Returned as `Err`, never thrown |
@@ -261,3 +266,15 @@ if (decision.isGranted) {
 | `LogHandler._includeTimestamp` etc. | Logger is now injected; configure the implementation directly |
 | `JsonParseException` / `JsonSerializeException` | Replaced by `ParseFailure` / `InvalidPolicyFailure` inside `Result` |
 | `IPolicySdkExceptions` interface | Replaced by `DomainFailure` sealed class |
+
+---
+
+## Further reading
+
+- [Quick Start](/quick-start): a complete v2 app from scratch.
+- [Widgets & Controller](/flutter/widgets): `PolicyGate`, `PolicyBuilder`, and
+  controller lifecycle.
+- [Storage & Persistence](/guides/persistence): replacing `MemoryPolicyStorage`
+  and restoring persisted policies at startup.
+- [Error Handling](/core-concepts/error-handling): working with `Result` and
+  `DomainFailure`.

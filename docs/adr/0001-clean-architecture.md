@@ -41,4 +41,4 @@ The dependency rule: inner layers never import outer layers. Domain knows nothin
 - **Negative**: More files and types than the v1 flat structure. Mitigated by keeping use cases ≤80
   LOC and grouping by feature inside each layer.
 - **Migration**: v1 API is a breaking change; migration guide is published in
-  `docs/migration-v1-to-v2.md`.
+  `docs/migration-v1-to-v2.mdx`.

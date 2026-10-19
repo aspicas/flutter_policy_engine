@@ -1,111 +1,84 @@
 ---
 title: Flutter Policy Engine
-description: A comprehensive policy management and access control system for Flutter applications
+description: A lightweight, extensible policy engine for Flutter with RBAC, basic ABAC, and reactive widgets
 ---
 
 # Flutter Policy Engine
 
-A powerful and flexible policy management system designed specifically for Flutter applications. The Flutter Policy Engine provides comprehensive role-based access control (RBAC) capabilities with an intuitive API and seamless integration with Flutter widgets.
-
-## 🚀 Key Features
-
-- **Role-Based Access Control**: Define roles with specific permissions and content access
-- **Dynamic Policy Management**: Add, update, and remove roles at runtime
-- **Widget Integration**: Built-in `PolicyWidget` for easy UI integration
-- **Memory Storage**: Efficient in-memory policy storage with extensible architecture
-- **Error Handling**: Comprehensive exception handling and validation
-- **Type Safety**: Full Dart type safety with null safety support
-
-## 🏗️ Architecture Overview
-
-The Flutter Policy Engine is built with a modular architecture that separates concerns and promotes maintainability:
-
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   PolicyWidget  │    │  PolicyProvider  │    │ PolicyManager   │
-│   (UI Layer)    │◄──►│  (Context)       │◄──►│  (Core Logic)   │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                                                         │
-                                                         ▼
-                                              ┌──────────────────┐
-                                              │ Policy Storage   │
-                                              │ (Memory/Extensible)│
-                                              └──────────────────┘
-```
-
-## 📦 Core Components
-
-### PolicyManager
-
-The central orchestrator that handles policy initialization, role management, and access evaluation.
-
-### PolicyProvider
-
-A Flutter widget that provides policy context to the widget tree, enabling child widgets to access policy information.
-
-### PolicyWidget
-
-A conditional widget that renders content based on the current user's role and permissions.
-
-### Role Model
-
-A data structure representing a role with its associated permissions and allowed content.
-
-## 🎯 Quick Example
+`flutter_policy_engine` is an authorization library for Flutter apps. You describe
+which **roles** may access which **resources**. The engine answers "can this role
+access this resource?" and its widgets show or hide UI based on the answer.
 
 ```dart
-// Initialize the policy manager
-final policyManager = PolicyManager();
-await policyManager.initialize({
-  "admin": ["LoginPage", "Dashboard", "UserManagement", "Settings"],
-  "user": ["LoginPage", "Dashboard"],
-  "guest": ["LoginPage"]
-});
-
-// Wrap your app with PolicyProvider
-PolicyProvider(
-  policyManager: policyManager,
-  child: MaterialApp(
-    home: MyHomePage(),
-  ),
-);
-
-// Use PolicyWidget for conditional rendering
-PolicyWidget(
-  role: "admin",
-  content: "UserManagement",
-  child: UserManagementPage(),
-  fallback: AccessDeniedWidget(),
+PolicyGate(
+  roleName: currentUser.role,
+  resourceId: 'settings',
+  fallback: const Text('Access denied'),
+  child: const SettingsScreen(),
 )
 ```
 
-## 🔧 Getting Started
+## Features
 
-1. **Installation**: Add the package to your `pubspec.yaml`
-2. **Quick Start**: Follow the basic setup guide
-3. **Examples**: Explore the interactive demos
-4. **API Reference**: Dive into the detailed API documentation
+- **RBAC with deny-by-default.** Each role lists the resource IDs it may access.
+  Everything else is denied, including unknown roles.
+- **Basic ABAC.** Match attributes on a `Subject` (who) against declarative rules
+  and against attributes on a `Resource` (what).
+- **Composable evaluators.** Combine `PolicyEvaluator`s with `denyOverrides` or
+  `allowOverrides` using `CompositeEvaluator`.
+- **Reactive widgets.** `PolicyEngineScope`, `PolicyGate`, and `PolicyBuilder`
+  re-evaluate automatically when policies or roles change.
+- **Typed errors.** Every engine operation returns a `Result` with a sealed
+  `DomainFailure` instead of throwing.
+- **Pluggable storage.** In-memory by default, `SharedPreferences` for
+  persistence, or your own `IPolicyRepository`.
+- **Injectable logging.** `NoopLogger` by default, `ConsoleLogger` for development,
+  or your own `ILogger`.
+- **No global state.** All runtime state lives in a `PolicyEngineController` that
+  you create and own.
 
-## 📚 Documentation Sections
+## How it fits together
 
-- **[Quick Start](/quick-start)**: Get up and running in minutes
-- **[Core Concepts](/core-concepts/policy-management)**: Understand the fundamental concepts
-- **[Examples](/examples/basic-policy-demo)**: Interactive examples and demos
-- **[API Reference](/api/policy-manager)**: Complete API documentation
-- **[Advanced Topics](/advanced/best-practices)**: Best practices and advanced usage
+```
+ Widgets                 PolicyGate · PolicyBuilder
+   │  read controller via
+   ▼
+ PolicyEngineScope       InheritedNotifier → rebuilds dependants on change
+   │  provides
+   ▼
+ PolicyEngineController  ChangeNotifier — the single owner of runtime state
+   │  delegates to
+   ▼
+ PolicyEngine            facade over the use cases (load, evaluate, role CRUD)
+   │  reads / writes
+   ▼
+ IPolicyRepository       InMemory · SharedPreferences · your own
+```
 
-## 🎮 Interactive Demos
+Internally the package follows Clean Architecture. The `domain` layer (entities,
+evaluators, failures) is pure Dart. Flutter-specific code lives in the
+`infrastructure` and `presentation` layers. Everything is exported from a single
+import:
 
-The Flutter Policy Engine includes comprehensive example applications that demonstrate:
+```dart
+import 'package:flutter_policy_engine/flutter_policy_engine.dart';
+```
 
-- **Basic Policy Demo**: Simple role-based access control
-- **Role Management Demo**: Dynamic role creation and management
-- **Interactive Testing**: Real-time policy testing and validation
+## Where to go next
 
-## 🤝 Contributing
+- **[Installation](/installation)**: add the package to your app.
+- **[Quick Start](/quick-start)**: a complete working app in a few minutes.
+- **[Policies & Roles](/core-concepts/policy-management)**: the JSON schema and
+  runtime role management.
+- **[Access Evaluation](/core-concepts/access-evaluation)**: how RBAC, ABAC, and
+  composite evaluation decide.
+- **[Widgets & Controller](/flutter/widgets)**: gate your UI.
+- **[Migrating from v1](/migration-v1-to-v2)**: if you are upgrading from
+  `PolicyManager` / `PolicyWidget`.
 
-We welcome contributions! Please see our [Contributing Guide](https://github.com/your-repo/flutter_policy_engine/blob/main/CONTRIBUTING.md) for details.
+## Links
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/your-repo/flutter_policy_engine/blob/main/LICENSE) file for details.
+- [Package on pub.dev](https://pub.dev/packages/flutter_policy_engine)
+- [Source code on GitHub](https://github.com/aspicas/flutter_policy_engine)
+- [Issue tracker](https://github.com/aspicas/flutter_policy_engine/issues)
+- [Changelog](https://github.com/aspicas/flutter_policy_engine/blob/main/CHANGELOG.md)

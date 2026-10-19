@@ -1,0 +1,207 @@
+---
+title: Widgets & Controller
+description: PolicyEngineController, PolicyEngineScope, PolicyGate, and PolicyBuilder
+---
+
+# Widgets & Controller
+
+The presentation layer has four pieces:
+
+| Type | Role |
+|---|---|
+| `PolicyEngineController` | A `ChangeNotifier` that owns the engine and all runtime state. |
+| `PolicyEngineScope` | An `InheritedNotifier` that provides the controller to the subtree. |
+| `PolicyGate` | Shows `child` when access is granted, otherwise `fallback`. |
+| `PolicyBuilder` | Calls `builder` with the `AccessDecision` (or `null` while loading). |
+
+## `PolicyEngineController`
+
+### Creating one
+
+```dart
+// In-memory storage (most apps).
+final controller = PolicyEngineController.inMemory();
+
+// With an asset loader and a development logger.
+final controller = PolicyEngineController.inMemory(
+  assetLoader: const FlutterAssetLoader(),
+  logger: const ConsoleLogger(),
+);
+
+// With any IPolicyRepository, e.g. persistent storage.
+final controller = PolicyEngineController.withRepository(
+  repository: await SharedPreferencesPolicyRepository.create(),
+  assetLoader: const FlutterAssetLoader(),
+);
+```
+
+`logger` defaults to `NoopLogger`. `assetLoader` is only needed for
+`loadPoliciesFromAsset`.
+
+### API
+
+| Member | Notifies listeners | Description |
+|---|---|---|
+| `isInitialized` | none | `true` after the first successful load. |
+| `loadPolicies(map)` | on success | Replaces the policy with `map` (v2 schema). |
+| `loadPoliciesFromAsset(path)` | on success | Same, from a JSON asset. |
+| `evaluateAccess(role, resource)` | none | `Result<AccessDecision, DomainFailure>`. Returns `Err(EngineNotInitializedFailure)` before the first load. |
+| `addRole(role)` | on success | Adds or replaces a role. |
+| `updateRole(name, newRole)` | on success | Replaces (or renames) a role. |
+| `removeRole(name)` | on success | Removes a role. |
+| `listRoles()` | none | All current roles. |
+
+### Lifecycle
+
+The controller is a `ChangeNotifier`. Create it once, outside `build`, and dispose
+it when its owner goes away:
+
+```dart
+class _AppShellState extends State<AppShell> {
+  late final PolicyEngineController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = PolicyEngineController.inMemory();
+    _controller.loadPolicies(policies);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PolicyEngineScope(
+      controller: _controller,
+      child: widget.child,
+    );
+  }
+}
+```
+
+<Warning>
+Don't write `PolicyEngineScope(controller: PolicyEngineController.inMemory(), ...)`
+inside a `build` method. Every rebuild would create a fresh, empty controller.
+</Warning>
+
+## `PolicyEngineScope`
+
+```dart
+PolicyEngineScope(
+  controller: controller,
+  child: const MaterialApp(home: HomePage()),
+)
+```
+
+| Method | Subscribes to changes | When to use |
+|---|---|---|
+| `PolicyEngineScope.of(context)` | yes | Inside `build`. Throws `FlutterError` if there is no scope above. |
+| `PolicyEngineScope.maybeOf(context)` | no | In callbacks and event handlers. Returns `null` if there is no scope. |
+
+Widgets that read the controller with `of` rebuild whenever the controller
+notifies, that is, after a successful load or a role change.
+
+## `PolicyGate`
+
+```dart
+PolicyGate(
+  roleName: user.role,
+  resourceId: 'settings',
+  loading: const CircularProgressIndicator(),
+  fallback: const Text('Settings are available to admins only'),
+  onDenied: (failure) => debugPrint('Denied: ${failure.message}'),
+  child: const SettingsPanel(),
+)
+```
+
+| Parameter | Required | Description |
+|---|---|---|
+| `roleName` | yes | The role to evaluate. |
+| `resourceId` | yes | The resource to check. |
+| `child` | yes | Shown when access is granted. |
+| `fallback` | no | Shown when access is denied or evaluation failed. Defaults to an empty `SizedBox`. |
+| `loading` | no | Shown while the evaluation is in flight. Defaults to an empty `SizedBox`. |
+| `onDenied` | no | Called with the `DomainFailure` when access is denied or evaluation failed. |
+
+`PolicyGate` evaluates asynchronously. On the first frame it shows `loading`, and
+the result appears on a later frame.
+
+<Info>
+`onDenied` is called **during build**, possibly more than once if the gate
+rebuilds. It's fine for logging. For UI side effects, such as showing a snackbar,
+navigating, or calling `setState`, defer the work with
+`WidgetsBinding.instance.addPostFrameCallback` and guard against repeats.
+</Info>
+
+## `PolicyBuilder`
+
+Use `PolicyBuilder` to render different UI per state or to show the denial
+reason:
+
+```dart
+PolicyBuilder(
+  roleName: user.role,
+  resourceId: 'posts',
+  builder: (context, decision) {
+    if (decision == null) return const CircularProgressIndicator();
+    if (decision.isGranted) return const EditButton();
+    return Text('Read-only: ${decision.failure?.message}');
+  },
+)
+```
+
+`decision` is `null` while loading. If evaluation fails with an `Err`, the builder
+receives `AccessDecision.denied(failure)`, so you only ever handle "granted" and
+"denied".
+
+## When widgets re-evaluate
+
+`PolicyGate` and `PolicyBuilder` re-run their evaluation when:
+
+- the controller notifies, after `loadPolicies`, `loadPoliciesFromAsset`,
+  `addRole`, `updateRole`, or `removeRole` succeeds; or
+- their `roleName` or `resourceId` changes.
+
+So you can mount gated widgets before policies finish loading. They show the
+fallback until the first load succeeds, then update on their own.
+
+## Guarding navigation and actions
+
+For imperative checks in event handlers, get the controller with `maybeOf` and
+check `context.mounted` after the `await`:
+
+```dart
+ElevatedButton(
+  onPressed: () async {
+    final controller = PolicyEngineScope.maybeOf(context);
+    if (controller == null) return;
+
+    final result = await controller.evaluateAccess(role, 'settings');
+    final granted = switch (result) {
+      Ok(:final value) => value.isGranted,
+      Err() => false,
+    };
+    if (!context.mounted) return;
+
+    if (granted) {
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => const SettingsPage()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Access denied')),
+      );
+    }
+  },
+  child: const Text('Open settings'),
+)
+```
+
+<Info>
+Client-side gating only improves UX. It doesn't secure your data. Always enforce
+the same rules on your backend.
+</Info>

@@ -5,7 +5,10 @@ Access Control (RBAC)** and basic **Attribute-Based Access Control (ABAC)** with
 Clean Architecture, injectable logging, and optional persistent storage.
 
 [![pub package](https://img.shields.io/pub/v/flutter_policy_engine.svg)](https://pub.dev/packages/flutter_policy_engine)
+[![Documentation](https://img.shields.io/badge/docs-docs.page-blue.svg)](https://docs.page/aspicas/flutter_policy_engine)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+📖 **Full documentation: [docs.page/aspicas/flutter_policy_engine](https://docs.page/aspicas/flutter_policy_engine)**
 
 ---
 
@@ -13,8 +16,8 @@ Clean Architecture, injectable logging, and optional persistent storage.
 
 - **RBAC** — map roles to allowed resources; deny by default.
 - **ABAC** — match subject/resource attributes against declarative rules.
-- **Composite evaluation** — combine RBAC + ABAC with `denyOverrides`,
-  `allowOverrides`, or `anyOf` strategies.
+- **Composite evaluation** — combine `PolicyEvaluator`s with `denyOverrides` or
+  `allowOverrides` via `CompositeEvaluator`.
 - **Injectable logger** — `ILogger` port with `ConsoleLogger` and `NoopLogger`
   adapters.
 - **Flexible storage** — `InMemoryPolicyRepository` (default) or
@@ -53,18 +56,23 @@ Future<void> main() async {
   });
 
   final result = await controller.evaluateAccess('admin', 'settings');
-  result.when(
-    ok:  (decision) => print('Granted: ${decision.isGranted}'),
-    err: (failure)  => print('Error: ${failure.message}'),
-  );
+  switch (result) {
+    case Ok(:final value):
+      print('Granted: ${value.isGranted}');
+    case Err(:final error):
+      print('Error: ${error.message}');
+  }
 }
 ```
 
 ### 3. Wrap the widget tree
 
+Create the controller once (e.g. in `main` or a `State`'s `initState`) and
+provide it to the tree:
+
 ```dart
 PolicyEngineScope(
-  controller: PolicyEngineController.inMemory(),
+  controller: controller,
   child: MyApp(),
 )
 ```
@@ -75,8 +83,8 @@ PolicyEngineScope(
 PolicyGate(
   roleName: 'admin',
   resourceId: 'settings',
-  child: const SettingsScreen(),
   fallback: const Text('Access denied'),
+  child: const SettingsScreen(),
 )
 ```
 
@@ -108,11 +116,10 @@ Create an asset following the **v2 canonical schema**:
 }
 ```
 
-Then load it at startup:
+Declare it under `flutter.assets` in `pubspec.yaml`, then load it at startup:
 
 ```dart
-final controller = PolicyEngineController.withRepository(
-  repository: InMemoryPolicyRepository(),
+final controller = PolicyEngineController.inMemory(
   assetLoader: const FlutterAssetLoader(),
 );
 
@@ -126,73 +133,63 @@ await controller.loadPoliciesFromAsset('assets/policies/roles.json');
 ```dart
 import 'package:flutter_policy_engine/flutter_policy_engine.dart';
 
-Future<void> main() async {
-  // ABAC policy: only subjects from 'eu' region may access 'gdpr_data'.
-  final abacPolicy = AbacPolicy(
-    rules: const [
+void main() {
+  // Every rule must pass for access to be granted.
+  const abacPolicy = AbacPolicy(
+    rules: [
+      // Only subjects from the 'eu' region…
+      AttributeRule(subjectAttribute: 'region', expectedValue: 'eu'),
+      // …whose department matches the resource's department.
       AttributeRule(
-        subjectAttribute: 'region',
-        requiredValue: 'eu',
-        resourceId: 'gdpr_data',
+        subjectAttribute: 'department',
+        resourceAttribute: 'department',
       ),
     ],
   );
 
-  final evaluator = CompositeEvaluator(
-    evaluators: [
-      const RbacEvaluator(),
-      AbacEvaluator(policy: abacPolicy),
-    ],
-    strategy: CompositeStrategy.denyOverrides,
+  const subject = Subject(
+    attributes: {'region': 'eu', 'department': 'legal'},
+  );
+  final resource = Resource(
+    id: 'gdpr_data',
+    attributes: {'department': 'legal'},
   );
 
-  final repository = InMemoryPolicyRepository();
-  await repository.save(
-    Policy(
-      roles: {
-        'analyst': RoleEntity(
-          name: RoleName('analyst'),
-          allowedResources: const {'gdpr_data'},
-        ),
-      },
-    ),
-  );
-
-  final euSubject = Subject(
-    id: 'alice',
-    attributes: const {'region': 'eu'},
-  );
-  final resource = Resource(id: 'gdpr_data');
-
-  final decision = await evaluator.evaluate(
-    await repository.load().then((r) => r.getOrElse(const Policy(roles: {}))),
-    'analyst',
-    resource.id,
-    subject: euSubject,
-    resource: resource,
-  );
-
+  final decision = const AbacEvaluator().evaluate(subject, resource, abacPolicy);
   print(decision.isGranted); // true
 }
 ```
+
+`PolicyEngineController` and the widgets evaluate RBAC only. To require both
+RBAC and ABAC, run `controller.evaluateAccess` first and then `AbacEvaluator` —
+see [Access Evaluation](https://docs.page/aspicas/flutter_policy_engine/core-concepts/access-evaluation).
 
 ---
 
 ## Persistent storage
 
 ```dart
-final prefs = await SharedPreferences.getInstance();
-final repo   = SharedPreferencesPolicyRepository(prefs);
+final repository = await SharedPreferencesPolicyRepository.create();
 
 final controller = PolicyEngineController.withRepository(
-  repository: repo,
+  repository: repository,
   assetLoader: const FlutterAssetLoader(),
 );
 
-// Loads persisted policy if available, otherwise loads from asset.
-final stored = await repo.load();
-if (stored.getOrElse(const Policy(roles: {})).isEmpty) {
+final stored = (await repository.load()).getOrElse(const Policy(roles: {}));
+if (stored.isEmpty) {
+  // First launch: seed from the bundled asset.
   await controller.loadPoliciesFromAsset('assets/policies/roles.json');
+} else {
+  // Later launches: re-load the persisted policy so the controller is
+  // initialised (evaluateAccess fails with EngineNotInitializedFailure until a
+  // load call succeeds).
+  await controller.loadPolicies({
+    'roles': {
+      for (final MapEntry(:key, :value) in stored.roles.entries)
+        key: {'allowedResources': value.allowedResources.toList()},
+    },
+  });
 }
 ```
 
@@ -225,6 +222,9 @@ await controller.removeRole('editor');
 final result = await controller.listRoles();
 ```
 
+Every successful mutation notifies listeners, so `PolicyGate` and
+`PolicyBuilder` re-evaluate automatically.
+
 ---
 
 ## Architecture
@@ -232,10 +232,10 @@ final result = await controller.listRoles();
 ```
 lib/src/
   domain/          ← pure Dart — entities, value objects, evaluators, failures
-  application/     ← use cases, PolicyEngine facade, ILogger / IAssetLoader ports
+  application/     ← use cases, PolicyEngine facade, PolicyJsonCodec,
+                     ILogger / IAssetLoader ports
   infrastructure/  ← ConsoleLogger, NoopLogger, InMemoryPolicyRepository,
-                     SharedPreferencesPolicyRepository, FlutterAssetLoader,
-                     PolicyJsonCodec
+                     SharedPreferencesPolicyRepository, FlutterAssetLoader
   presentation/    ← PolicyEngineController, PolicyEngineScope,
                      PolicyGate, PolicyBuilder
 ```
@@ -249,10 +249,25 @@ Key design decisions:
 
 ---
 
+## Documentation
+
+The full guide lives at
+**[docs.page/aspicas/flutter_policy_engine](https://docs.page/aspicas/flutter_policy_engine)**:
+
+- [Quick Start](https://docs.page/aspicas/flutter_policy_engine/quick-start)
+- [Policies & Roles](https://docs.page/aspicas/flutter_policy_engine/core-concepts/policy-management)
+- [Access Evaluation](https://docs.page/aspicas/flutter_policy_engine/core-concepts/access-evaluation)
+- [Error Handling](https://docs.page/aspicas/flutter_policy_engine/core-concepts/error-handling)
+- [Widgets & Controller](https://docs.page/aspicas/flutter_policy_engine/flutter/widgets)
+- [Storage & Persistence](https://docs.page/aspicas/flutter_policy_engine/guides/persistence)
+- [Testing](https://docs.page/aspicas/flutter_policy_engine/guides/testing)
+
+---
+
 ## Migrating from v1
 
-See [docs/migration-v1-to-v2.md](docs/migration-v1-to-v2.md) for the full
-mapping table with before/after examples.
+See the [migration guide](https://docs.page/aspicas/flutter_policy_engine/migration-v1-to-v2)
+for the full mapping table with before/after examples.
 
 ---
 
