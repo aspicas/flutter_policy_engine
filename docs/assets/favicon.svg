@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="56 24 400 464" role="img" aria-labelledby="title">
+  <title id="title">flutter_policy_engine</title>
+  <defs>
+    <linearGradient id="shield" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#42A5F5"/>
+      <stop offset="1" stop-color="#0D47A1"/>
+    </linearGradient>
+  </defs>
+  <path d="M256 36 L436 100 V236 C436 352 358 440 256 476 C154 440 76 352 76 236 V100 Z"
+        fill="url(#shield)"/>
+  <circle cx="256" cy="206" r="58" fill="#FFFFFF"/>
+  <path d="M224 236 H288 L308 360 Q310 376 294 376 H218 Q202 376 204 360 Z" fill="#FFFFFF"/>
+</svg>
