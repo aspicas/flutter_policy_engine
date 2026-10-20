@@ -1,0 +1,179 @@
+---
+title: Access Evaluation
+description: How RBAC, ABAC, and composite evaluators reach an access decision
+---
+
+# Access Evaluation
+
+Every check produces an `AccessDecision`:
+
+```dart
+decision.isGranted; // true when access is allowed
+decision.isDenied;  // the inverse
+decision.failure;   // the DomainFailure explaining a denial, or null when granted
+```
+
+You can create decisions yourself with `const AccessDecision.granted()` and
+`AccessDecision.denied(failure)`, for example in a custom evaluator.
+
+## RBAC: role-based access control
+
+`RbacEvaluator` powers `PolicyEngineController.evaluateAccess`, `PolicyGate`, and
+`PolicyBuilder`. Given a role name, a resource ID, and a `Policy`, it checks the
+following rules in order:
+
+| Condition | Decision | Failure |
+|---|---|---|
+| Role name or resource ID is empty | denied | `InvalidPolicyFailure` |
+| No role with that name exists | denied | `PolicyNotFoundFailure` |
+| Resource ID isn't in the role's `allowedResources` | denied | `ResourceNotAllowedFailure` |
+| Otherwise | **granted** | none |
+
+Comparisons are exact and case-sensitive. Wildcards aren't supported, so list
+every resource a role may access.
+
+```dart
+final result = await controller.evaluateAccess('editor', 'posts');
+
+switch (result) {
+  case Ok(:final value) when value.isGranted:
+    print('granted');
+  case Ok(:final value):
+    print('denied: ${value.failure?.message}');
+  case Err(:final error):
+    print('could not evaluate: ${error.message}');
+}
+```
+
+An `Ok` holding a denied decision means the engine evaluated the request and said
+no. An `Err` means it couldn't evaluate at all, for example because policies
+aren't loaded yet or storage failed. Both should be treated as **no access**.
+
+## ABAC: attribute-based access control
+
+ABAC decides based on attributes instead of role membership. It uses three types:
+
+- **`Subject`**: who is asking, as a `Map<String, String>` of attributes.
+- **`Resource`**: what is being accessed. It has a non-empty `id` and optional
+  attributes, and throws `ArgumentError` for an empty ID.
+- **`AbacPolicy`**: a list of `AttributeRule`s. **Every** rule must pass.
+
+```dart
+const rules = AbacPolicy(
+  rules: [
+    // The subject's department must equal the resource's department.
+    AttributeRule(
+      subjectAttribute: 'department',
+      resourceAttribute: 'department',
+    ),
+    // The subject must have clearance == 'high'.
+    AttributeRule(subjectAttribute: 'clearance', expectedValue: 'high'),
+  ],
+);
+
+const subject = Subject(
+  attributes: {'department': 'finance', 'clearance': 'high'},
+);
+final resource = Resource(
+  id: 'q3-report',
+  attributes: {'department': 'finance'},
+);
+
+final decision = const AbacEvaluator().evaluate(subject, resource, rules);
+print(decision.isGranted); // true
+```
+
+### Rule semantics
+
+An `AttributeRule` passes when all of the following hold:
+
+1. The subject has `subjectAttribute`.
+2. If `expectedValue` is set, the subject's value equals it.
+3. If `resourceAttribute` is set, the resource has that attribute **and** its
+   value equals the subject's value for `subjectAttribute`.
+
+The evaluator checks rules in order and stops at the first one that fails. It
+returns `AccessDecision.denied(MissingAttributeFailure(...))`, whose `target` is
+`'subject'` or `'resource'`. A value mismatch is also reported as
+`MissingAttributeFailure`. An `AbacPolicy` with no rules is open and always
+grants.
+
+## Composite evaluation
+
+`CompositeEvaluator` combines several `PolicyEvaluator` implementations under one
+strategy:
+
+| Strategy | Result |
+|---|---|
+| `CompositeStrategy.denyOverrides` | Granted only if **every** evaluator grants. Returns the first denial. |
+| `CompositeStrategy.allowOverrides` | Granted if **any** evaluator grants. Returns the last denial when none grant. |
+
+A composite with an empty evaluator list always denies.
+
+`PolicyEvaluator` is the RBAC-shaped contract
+`evaluate(String roleName, String resourceId, Policy policy)`. Implement it to add
+your own rules, such as a superuser override:
+
+```dart
+final class SuperuserEvaluator implements PolicyEvaluator {
+  const SuperuserEvaluator();
+
+  @override
+  AccessDecision evaluate(String roleName, String resourceId, Policy policy) {
+    return roleName == 'root'
+        ? const AccessDecision.granted()
+        : const AccessDecision.denied(
+            PolicyNotFoundFailure('Not a superuser'),
+          );
+  }
+}
+
+final evaluator = CompositeEvaluator(
+  evaluators: const [SuperuserEvaluator(), RbacEvaluator()],
+  strategy: CompositeStrategy.allowOverrides,
+);
+
+final decision = evaluator.evaluate('root', 'settings', policy);
+```
+
+`DomainFailure` is sealed, so custom evaluators reuse the built-in failure types
+for their denial reasons.
+
+<Info>
+The controller and widgets always evaluate with RBAC only. Run custom
+`PolicyEvaluator`s and ABAC yourself against the data they need, as shown below.
+</Info>
+
+### Combining RBAC and ABAC
+
+`AbacEvaluator` takes a subject and a resource instead of a role name, so it
+doesn't implement `PolicyEvaluator` and can't go inside a `CompositeEvaluator`.
+To require both checks to pass (deny-overrides), chain them:
+
+```dart
+Future<AccessDecision> canAccess({
+  required PolicyEngineController controller,
+  required String role,
+  required Subject subject,
+  required Resource resource,
+  required AbacPolicy abacPolicy,
+}) async {
+  // 1. RBAC through the controller.
+  final rbac = switch (await controller.evaluateAccess(role, resource.id)) {
+    Ok(:final value) => value,
+    Err(:final error) => AccessDecision.denied(error),
+  };
+  if (rbac.isDenied) return rbac;
+
+  // 2. ABAC on top.
+  return const AbacEvaluator().evaluate(subject, resource, abacPolicy);
+}
+```
+
+For allow-overrides, return early on the first grant instead.
+
+## Next
+
+- [Error Handling](/core-concepts/error-handling): every failure type and when it
+  appears.
+- [Widgets & Controller](/flutter/widgets): use decisions in the UI.

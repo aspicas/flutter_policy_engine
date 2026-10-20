@@ -1,0 +1,86 @@
+---
+title: Logging
+description: Inject a logger to observe the policy engine
+---
+
+# Logging
+
+The engine writes to an injectable `ILogger`. The default is `NoopLogger`, which
+discards everything, so production apps pay no logging cost unless they opt in.
+
+## What gets logged
+
+The engine currently logs a **warning** for each role entry it skips while
+loading policies, for example a role without an `allowedResources` list or with a
+blank name. If some roles seem to be missing after a load, enable logging first.
+
+## `ConsoleLogger`
+
+`ConsoleLogger` writes through `dart:developer`'s `log`, so its output shows up in
+the IDE debug console and Flutter DevTools.
+
+```dart
+final controller = PolicyEngineController.inMemory(
+  logger: const ConsoleLogger(
+    tag: 'Auth',              // default: 'PolicyEngine'
+    minLevel: LogLevel.info,  // default: LogLevel.debug
+  ),
+);
+```
+
+Messages look like this:
+
+```
+[Auth] [WARN] [LoadPoliciesFromMap] Skipping role "editor": allowedResources must be a list
+```
+
+`LogLevel` values, from lowest to highest: `debug`, `info`, `warning`, `error`.
+Messages below `minLevel` are dropped.
+
+A common setup enables logging only in debug builds:
+
+```dart
+import 'package:flutter/foundation.dart';
+
+final controller = PolicyEngineController.inMemory(
+  logger: kDebugMode ? const ConsoleLogger() : const NoopLogger(),
+);
+```
+
+## Custom loggers
+
+Implement `ILogger` to forward messages to your own logging or crash-reporting
+stack:
+
+```dart
+final class DebugPrintLogger implements ILogger {
+  const DebugPrintLogger();
+
+  @override
+  void debug(String message, {Map<String, dynamic>? context, String? operation}) =>
+      debugPrint('DEBUG ${operation ?? ''} $message');
+
+  @override
+  void info(String message, {Map<String, dynamic>? context, String? operation}) =>
+      debugPrint('INFO ${operation ?? ''} $message');
+
+  @override
+  void warning(
+    String message, {
+    Map<String, dynamic>? context,
+    String? operation,
+    Object? error,
+  }) =>
+      debugPrint('WARN ${operation ?? ''} $message');
+
+  @override
+  void error(
+    String message, {
+    Map<String, dynamic>? context,
+    String? operation,
+    Object? error,
+    StackTrace? stackTrace,
+  }) =>
+      debugPrint('ERROR ${operation ?? ''} $message $error');
+}
+```
