@@ -5,18 +5,14 @@
       <stop offset="0" stop-color="#12325E"/>
       <stop offset="1" stop-color="#0B1F3A"/>
     </linearGradient>
-    <radialGradient id="glow" cx="0.2" cy="0.5" r="0.45">
-      <stop offset="0" stop-color="#42A5F5" stop-opacity="0.35"/>
+    <radialGradient id="glow" cx="0.21" cy="0.5" r="0.4">
+      <stop offset="0" stop-color="#42A5F5" stop-opacity="0.3"/>
       <stop offset="1" stop-color="#42A5F5" stop-opacity="0"/>
     </radialGradient>
-    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-      <path d="M40 0 H0 V40" fill="none" stroke="#FFFFFF" stroke-opacity="0.04" stroke-width="1"/>
-    </pattern>
   </defs>
   <rect width="1200" height="627" fill="url(#bg)"/>
-  <rect width="1200" height="627" fill="url(#grid)"/>
   <rect width="1200" height="627" fill="url(#glow)"/>
-  <svg x="70" y="165" width="320" height="320" viewBox="0 0 512 512">
+  <svg x="40" y="103" width="420" height="420" viewBox="0 0 512 512">
   
   <defs>
     <linearGradient id="bshield" x1="0" y1="0" x2="0" y2="1">
@@ -32,9 +28,7 @@
   <!-- Shield -->
   <path d="M256 36 L436 100 V236 C436 352 358 440 256 476 C154 440 76 352 76 236 V100 Z"
         fill="url(#bshield)"/>
-  <!-- Inner rim -->
-  <path d="M256 72 L404 124 V238 C404 334 340 408 256 440 C172 408 108 334 108 238 V124 Z"
-        fill="none" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="10"/>
+  
 
   <!-- Keyhole -->
   <circle cx="256" cy="214" r="48" fill="#FFFFFF"/>
@@ -46,10 +40,8 @@
   <path d="M362 389 L384 411 L424 368" fill="none" stroke="#FFFFFF" stroke-width="16"
         stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
-  <text x="420" y="250" font-family="'SF Mono','JetBrains Mono',Menlo,Consolas,monospace" font-size="54" font-weight="700" fill="#FFFFFF">flutter_policy_engine</text>
-  <text x="420" y="310" font-family="'SF Pro Display','Inter','Helvetica Neue',Arial,sans-serif" font-size="30" font-weight="500" fill="#BBDEFB">Lightweight authorization for Flutter apps</text>
-  <text x="420" y="352" font-family="'SF Pro Display','Inter','Helvetica Neue',Arial,sans-serif" font-size="24" fill="#90CAF9" fill-opacity="0.85">Gate your UI by role and attributes — deny by default.</text>
-  <g transform="translate(420,392)"><rect width="86" height="46" rx="23" fill="#FFFFFF" fill-opacity="0.08" stroke="#42A5F5" stroke-opacity="0.55" stroke-width="2"/><text x="43.0" y="30" text-anchor="middle" font-family="'SF Pro Display','Inter','Helvetica Neue',Arial,sans-serif" font-size="20" font-weight="600" fill="#E3F2FD">RBAC</text></g><g transform="translate(518,392)"><rect width="86" height="46" rx="23" fill="#FFFFFF" fill-opacity="0.08" stroke="#42A5F5" stroke-opacity="0.55" stroke-width="2"/><text x="43.0" y="30" text-anchor="middle" font-family="'SF Pro Display','Inter','Helvetica Neue',Arial,sans-serif" font-size="20" font-weight="600" fill="#E3F2FD">ABAC</text></g><g transform="translate(616,392)"><rect width="225" height="46" rx="23" fill="#FFFFFF" fill-opacity="0.08" stroke="#42A5F5" stroke-opacity="0.55" stroke-width="2"/><text x="112.5" y="30" text-anchor="middle" font-family="'SF Pro Display','Inter','Helvetica Neue',Arial,sans-serif" font-size="20" font-weight="600" fill="#E3F2FD">Reactive widgets</text></g><g transform="translate(853,392)"><rect width="248" height="46" rx="23" fill="#FFFFFF" fill-opacity="0.08" stroke="#42A5F5" stroke-opacity="0.55" stroke-width="2"/><text x="124.0" y="30" text-anchor="middle" font-family="'SF Pro Display','Inter','Helvetica Neue',Arial,sans-serif" font-size="20" font-weight="600" fill="#E3F2FD">Clean Architecture</text></g>
-  <text x="420" y="520" font-family="'SF Mono','JetBrains Mono',Menlo,Consolas,monospace" font-size="22" fill="#90CAF9">pub.dev/packages/flutter_policy_engine</text>
-  <rect x="0" y="619" width="1200" height="8" fill="#2EE59D"/>
+  <text x="490" y="262" font-family="'SF Pro Display','Inter','Helvetica Neue',Arial,sans-serif" font-size="66" font-weight="800" fill="#FFFFFF" letter-spacing="-1">flutter_policy_engine</text>
+  <text x="490" y="352" font-family="'SF Pro Display','Inter','Helvetica Neue',Arial,sans-serif" font-size="54" font-weight="700" fill="#90CAF9">Authorization</text>
+  <text x="490" y="418" font-family="'SF Pro Display','Inter','Helvetica Neue',Arial,sans-serif" font-size="54" font-weight="700" fill="#90CAF9">for Flutter apps</text>
+  <rect x="0" y="603" width="1200" height="24" fill="#2EE59D"/>
 </svg>
