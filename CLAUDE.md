@@ -250,6 +250,6 @@ See `example/assets/policies/user_roles.json` for a canonical sample.
 
 - **Architecture decisions:** `docs/adr/`
 - **Feature specs:** `docs/specs/spec-001-rbac-evaluation.md` … `spec-008-error-model.md`
-- **v1 → v2 migration:** `docs/migration-v1-to-v2.md`
+- **v1 → v2 migration:** `docs/migration-v1-to-v2.mdx`
 - **Hosted docs:** https://docs.page/aspicas/flutter_policy_engine
 - **Local CI simulation:** `scripts/README.md` (uses `act` + Docker)

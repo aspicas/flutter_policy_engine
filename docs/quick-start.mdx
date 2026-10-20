@@ -1,235 +1,168 @@
 ---
 title: Quick Start
-description: Get up and running with Flutter Policy Engine in minutes
+description: Build a role-gated Flutter screen with flutter_policy_engine in a few minutes
 ---
 
-# Quick Start Guide
+# Quick Start
 
-Get started with Flutter Policy Engine in just a few minutes. This guide will walk you through the basic setup and show you how to implement role-based access control in your Flutter app.
+This guide builds a small app. It loads three roles, provides the engine to the
+widget tree, and shows or hides UI per role.
 
-## 📦 Installation
+## 1. Define your policies
 
-Add the Flutter Policy Engine to your `pubspec.yaml`:
-
-```yaml
-dependencies:
-  flutter_policy_engine: ^1.0.0
-```
-
-Then run:
-
-```bash
-flutter pub get
-```
-
-## 🚀 Basic Setup
-
-### 1. Import the Package
+Policies use the v2 schema: a top-level `roles` object that maps each role name to
+its `allowedResources`.
 
 ```dart
-import 'package:flutter_policy_engine/flutter_policy_engine.dart';
-```
-
-### 2. Initialize Policy Manager
-
-Create a `PolicyManager` instance and initialize it with your role definitions:
-
-```dart
-final policyManager = PolicyManager();
-
-// Define your roles and their permissions
-final policies = {
-  "admin": ["LoginPage", "Dashboard", "UserManagement", "Settings"],
-  "user": ["LoginPage", "Dashboard"],
-  "guest": ["LoginPage"]
+const policies = <String, dynamic>{
+  'roles': {
+    'admin': {
+      'allowedResources': ['dashboard', 'posts', 'settings', 'users'],
+    },
+    'editor': {
+      'allowedResources': ['dashboard', 'posts'],
+    },
+    'guest': {
+      'allowedResources': ['dashboard'],
+    },
+  },
 };
-
-// Initialize the policy manager
-await policyManager.initialize(policies);
 ```
 
-### 3. Wrap Your App with PolicyProvider
+Resource IDs are plain strings that you choose. Matching is exact and
+case-sensitive.
 
-Wrap your main app widget with `PolicyProvider` to make the policy manager available throughout your widget tree:
+## 2. Create a controller and load the policies
 
-```dart
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return PolicyProvider(
-      policyManager: policyManager,
-      child: MaterialApp(
-        title: 'My App',
-        home: MyHomePage(),
-      ),
-    );
-  }
-}
-```
-
-### 4. Use PolicyWidget for Conditional Rendering
-
-Use `PolicyWidget` to conditionally render content based on user roles:
+`PolicyEngineController` owns all engine state. `PolicyEngineController.inMemory()`
+stores policies in memory, which is enough for most apps that load policies at
+startup.
 
 ```dart
-PolicyWidget(
-  role: "admin",
-  content: "UserManagement",
-  child: UserManagementPage(),
-  fallback: AccessDeniedWidget(),
-)
-```
-
-## 📱 Complete Example
-
-Here's a complete working example that demonstrates the basic functionality:
-
-```dart
-import 'package:flutter/material.dart';
-import 'package:flutter_policy_engine/flutter_policy_engine.dart';
-
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize policy manager
-  final policyManager = PolicyManager();
-  await policyManager.initialize({
-    "admin": ["LoginPage", "Dashboard", "UserManagement", "Settings"],
-    "user": ["LoginPage", "Dashboard"],
-    "guest": ["LoginPage"]
-  });
+  final controller = PolicyEngineController.inMemory();
+  final result = await controller.loadPolicies(policies);
+  if (result case Err(:final error)) {
+    debugPrint('Could not load policies: ${error.message}');
+  }
 
-  runApp(MyApp(policyManager: policyManager));
+  runApp(MyApp(controller: controller));
 }
+```
 
+`loadPolicies` doesn't throw. It returns a `Result`: `Ok` on success, or `Err`
+with a typed `DomainFailure`. See [Error Handling](/core-concepts/error-handling).
+
+## 3. Provide the controller to the widget tree
+
+Wrap your app with `PolicyEngineScope` so that descendant widgets can reach the
+controller:
+
+```dart
 class MyApp extends StatelessWidget {
-  final PolicyManager policyManager;
+  const MyApp({required this.controller, super.key});
 
-  const MyApp({Key? key, required this.policyManager}) : super(key: key);
+  final PolicyEngineController controller;
 
   @override
   Widget build(BuildContext context) {
-    return PolicyProvider(
-      policyManager: policyManager,
-      child: MaterialApp(
-        title: 'Policy Engine Demo',
-        theme: ThemeData(primarySwatch: Colors.blue),
-        home: HomePage(),
-      ),
+    return PolicyEngineScope(
+      controller: controller,
+      child: const MaterialApp(home: HomePage(role: 'editor')),
     );
   }
 }
+```
 
-class HomePage extends StatefulWidget {
-  @override
-  _HomePageState createState() => _HomePageState();
-}
+## 4. Gate the UI
 
-class _HomePageState extends State<HomePage> {
-  String currentRole = 'guest';
+Use `PolicyGate` to show a widget only when access is granted. Use
+`PolicyBuilder` when you need the decision itself:
+
+```dart
+class HomePage extends StatelessWidget {
+  const HomePage({required this.role, super.key});
+
+  final String role;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Policy Engine Demo')),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Current Role: $currentRole',
-                 style: Theme.of(context).textTheme.headlineSmall),
-            SizedBox(height: 16),
+      appBar: AppBar(title: Text('Signed in as $role')),
+      body: ListView(
+        children: [
+          // Rendered only for roles that can access 'posts'.
+          PolicyGate(
+            roleName: role,
+            resourceId: 'posts',
+            child: const ListTile(title: Text('Write a post')),
+          ),
 
-            // Role selector
-            Row(
-              children: ['guest', 'user', 'admin'].map((role) =>
-                Padding(
-                  padding: EdgeInsets.only(right: 8),
-                  child: ElevatedButton(
-                    onPressed: () => setState(() => currentRole = role),
-                    child: Text(role),
-                  ),
-                )
-              ).toList(),
+          // Shows a fallback instead of hiding the entry.
+          PolicyGate(
+            roleName: role,
+            resourceId: 'settings',
+            fallback: const ListTile(
+              enabled: false,
+              title: Text('Settings (admins only)'),
             ),
+            child: const ListTile(title: Text('Settings')),
+          ),
 
-            SizedBox(height: 32),
-
-            // Policy widgets
-            PolicyWidget(
-              role: currentRole,
-              content: "Dashboard",
-              child: Card(
-                color: Colors.green[100],
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text('Dashboard Access Granted'),
+          // Full control over the loading, granted, and denied states.
+          PolicyBuilder(
+            roleName: role,
+            resourceId: 'users',
+            builder: (context, decision) {
+              if (decision == null) return const LinearProgressIndicator();
+              return ListTile(
+                title: const Text('User management'),
+                subtitle: Text(
+                  decision.isGranted
+                      ? 'Granted'
+                      : 'Denied: ${decision.failure?.message}',
                 ),
-              ),
-              fallback: Card(
-                color: Colors.red[100],
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text('Dashboard Access Denied'),
-                ),
-              ),
-            ),
-
-            SizedBox(height: 16),
-
-            PolicyWidget(
-              role: currentRole,
-              content: "UserManagement",
-              child: Card(
-                color: Colors.green[100],
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text('User Management Access Granted'),
-                ),
-              ),
-              fallback: Card(
-                color: Colors.red[100],
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text('User Management Access Denied'),
-                ),
-              ),
-            ),
-          ],
-        ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 }
 ```
 
-## 🎯 What You've Learned
+Change `role: 'editor'` to `'admin'` or `'guest'` and hot-restart to see the gates
+change.
 
-In this quick start guide, you've learned how to:
+## 5. Evaluate access in code
 
-1. **Install** the Flutter Policy Engine package
-2. **Initialize** a policy manager with role definitions
-3. **Provide** policy context to your app
-4. **Use** PolicyWidget for conditional rendering
-5. **Test** different roles and permissions
+Outside the widget tree, for example in a navigation guard or a service, call
+`evaluateAccess` directly:
 
-## 🔄 Next Steps
+```dart
+final canPublish = switch (await controller.evaluateAccess('editor', 'posts')) {
+  Ok(:final value) => value.isGranted,
+  Err() => false, // e.g. policies not loaded yet
+};
+```
 
-Now that you have the basics working, explore these next topics:
+## What you've built
 
-- **[Policy Management](/core-concepts/policy-management)**: Learn about dynamic role management
-- **[Role-Based Access Control](/core-concepts/role-based-access)**: Understand the RBAC concepts
-- **[Examples](/examples/basic-policy-demo)**: See more complex examples
-- **[API Reference](/api/policy-manager)**: Dive into the complete API documentation
+- A **policy map** in the v2 schema.
+- A **`PolicyEngineController`** that loaded it.
+- A **`PolicyEngineScope`** that exposes the controller to the tree.
+- **`PolicyGate`** and **`PolicyBuilder`** widgets that re-evaluate whenever the
+  controller changes, for example after `addRole` or `loadPolicies`.
 
-## 🐛 Troubleshooting
+## Next steps
 
-If you encounter any issues:
-
-1. **Make sure** you've run `flutter pub get`
-2. **Check** that you're using the latest version of Flutter
-3. **Verify** your role definitions are properly formatted
-4. **Ensure** PolicyProvider wraps your app correctly
-
-For more help, check the [Error Handling](/advanced/error-handling) guide or open an issue on GitHub.
+- [Policies & Roles](/core-concepts/policy-management): load from JSON assets and
+  manage roles at runtime.
+- [Widgets & Controller](/flutter/widgets): controller lifecycle, loading states,
+  and `onDenied`.
+- [Storage & Persistence](/guides/persistence): keep policies across app
+  restarts.
+- [Testing](/guides/testing): unit- and widget-test gated UI.

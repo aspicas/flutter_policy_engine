@@ -1,0 +1,99 @@
+---
+title: Error Handling
+description: Result, Ok, Err, and the sealed DomainFailure hierarchy
+---
+
+# Error Handling
+
+Engine operations don't throw. Each returns a `Result<T, DomainFailure>`:
+
+- **`Ok(value)`**: the operation succeeded.
+- **`Err(error)`**: the operation failed with a typed `DomainFailure`.
+
+## Working with `Result`
+
+`Result`, `Ok`, and `Err` are sealed, so Dart 3 pattern matching is exhaustive:
+
+```dart
+final result = await controller.loadPolicies(policies);
+
+switch (result) {
+  case Ok():
+    print('Policies loaded');
+  case Err(:final error):
+    print('Failed: ${error.message}');
+}
+```
+
+Use an `if case` when you only care about one branch:
+
+```dart
+if (result case Err(:final error)) {
+  debugPrint(error.message);
+}
+```
+
+The `ResultExtensions` helpers cover common cases:
+
+| Helper | Description |
+|---|---|
+| `isOk` / `isErr` | `true` when the result is `Ok` / `Err`. |
+| `getOrElse(fallback)` | The `Ok` value, or `fallback` on `Err`. |
+| `mapOk(fn)` | Transforms an `Ok` value and passes an `Err` through unchanged. |
+
+```dart
+final granted = (await controller.evaluateAccess('editor', 'posts'))
+    .mapOk((decision) => decision.isGranted)
+    .getOrElse(false);
+```
+
+## `DomainFailure` types
+
+`DomainFailure` is a sealed class with a `message`. Switch on it to handle each
+case:
+
+```dart
+String describe(DomainFailure failure) => switch (failure) {
+      PolicyNotFoundFailure() => 'Unknown role',
+      ResourceNotAllowedFailure(:final resourceId) => 'No access to $resourceId',
+      InvalidPolicyFailure() => 'Invalid input',
+      ParseFailure() => 'Malformed policy data',
+      StorageFailure() => 'Could not read or write policies',
+      EngineNotInitializedFailure() => 'Policies not loaded yet',
+      MissingAttributeFailure(:final attributeKey) =>
+        'Missing or mismatched attribute "$attributeKey"',
+    };
+```
+
+| Failure | Extra fields | Typical source |
+|---|---|---|
+| `PolicyNotFoundFailure` | none | RBAC: no role with that name. Also used by `CompositeEvaluator` when no evaluators are configured or all deny. |
+| `ResourceNotAllowedFailure` | `roleName`, `resourceId` | RBAC: the role exists but doesn't allow the resource. |
+| `InvalidPolicyFailure` | none | Empty role or resource name during evaluation, blank name in `removeRole`, or `loadPoliciesFromAsset` called without an asset loader. |
+| `ParseFailure` | `cause` | Invalid JSON, or a missing or non-object `roles` key. |
+| `StorageFailure` | `cause` | A repository or asset loader couldn't read or write, e.g. a missing asset or a `SharedPreferences` error. |
+| `EngineNotInitializedFailure` | none | `controller.evaluateAccess` called before any successful load. |
+| `MissingAttributeFailure` | `attributeKey`, `target` | ABAC: an attribute is absent or its value doesn't match. |
+
+## Denied vs. failed
+
+`evaluateAccess` can say "no" in two ways:
+
+| Result | Meaning |
+|---|---|
+| `Ok(AccessDecision.denied(failure))` | The engine evaluated the request and denied it. `failure` explains why. |
+| `Err(failure)` | The engine couldn't evaluate, e.g. `EngineNotInitializedFailure` or `StorageFailure`. |
+
+Treat both as **no access**. `PolicyGate` and `PolicyBuilder` already do this:
+they turn an `Err` into a denied decision that carries the failure.
+
+## What can still throw
+
+A few constructors and lookups validate their input eagerly and throw, because
+they signal programming errors rather than runtime conditions:
+
+| Call | Throws when |
+|---|---|
+| `RoleName(value)` | `value` is empty or whitespace (`ArgumentError`). |
+| `Resource(id: ...)` | `id` is empty or whitespace (`ArgumentError`). |
+| `PolicyEngineScope.of(context)` | No `PolicyEngineScope` ancestor exists (`FlutterError`). Use `maybeOf` to get `null` instead. |

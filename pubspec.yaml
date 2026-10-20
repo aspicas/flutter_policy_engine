@@ -4,7 +4,12 @@ version: 2.0.0
 # homepage: https://github.com/davidgarcia93/flutter_policy_engine
 repository: https://github.com/aspicas/flutter_policy_engine
 issue_tracker: https://github.com/aspicas/flutter_policy_engine/issues
-documentation: https://github.com/aspicas/flutter_policy_engine#readme
+documentation: https://docs.page/aspicas/flutter_policy_engine
+screenshots:
+  - description: "flutter_policy_engine logo"
+    path: doc/screenshots/icon.png
+  - description: "flutter_policy_engine: lightweight authorization for Flutter apps"
+    path: doc/screenshots/social-preview.png
 topics:
   - authorization
   - engine

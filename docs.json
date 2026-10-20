@@ -1,6 +1,18 @@
 {
   "name": "Flutter Policy Engine",
-  "description": "A comprehensive policy management and access control system for Flutter applications",
+  "description": "A lightweight, extensible policy engine for Flutter with RBAC, basic ABAC, and reactive widgets",
+  "logo": {
+    "light": "/assets/logo.png",
+    "dark": "/assets/logo.png"
+  },
+  "favicon": "/assets/favicon.png",
+  "socialPreview": "/assets/social-preview.png",
+  "theme": {
+    "primary": "#1E88E5"
+  },
+  "social": {
+    "github": "aspicas/flutter_policy_engine"
+  },
   "sidebar": [
     {
       "group": "Getting Started",
@@ -11,14 +23,14 @@
           "icon": "rocket"
         },
         {
-          "title": "Quick Start",
-          "href": "/quick-start",
-          "icon": "play"
-        },
-        {
           "title": "Installation",
           "href": "/installation",
           "icon": "download"
+        },
+        {
+          "title": "Quick Start",
+          "href": "/quick-start",
+          "icon": "play"
         }
       ]
     },
@@ -26,9 +38,54 @@
       "group": "Core Concepts",
       "pages": [
         {
-          "title": "Policy Management",
+          "title": "Policies & Roles",
           "href": "/core-concepts/policy-management",
           "icon": "shield"
+        },
+        {
+          "title": "Access Evaluation",
+          "href": "/core-concepts/access-evaluation",
+          "icon": "scale-balanced"
+        },
+        {
+          "title": "Error Handling",
+          "href": "/core-concepts/error-handling",
+          "icon": "triangle-exclamation"
+        }
+      ]
+    },
+    {
+      "group": "Flutter Integration",
+      "pages": [
+        {
+          "title": "Widgets & Controller",
+          "href": "/flutter/widgets",
+          "icon": "layer-group"
+        }
+      ]
+    },
+    {
+      "group": "Guides",
+      "pages": [
+        {
+          "title": "Storage & Persistence",
+          "href": "/guides/persistence",
+          "icon": "database"
+        },
+        {
+          "title": "Logging",
+          "href": "/guides/logging",
+          "icon": "terminal"
+        },
+        {
+          "title": "Testing",
+          "href": "/guides/testing",
+          "icon": "vial"
+        },
+        {
+          "title": "Migrating from v1",
+          "href": "/migration-v1-to-v2",
+          "icon": "arrow-right-arrow-left"
         }
       ]
     },
@@ -41,14 +98,14 @@
           "icon": "code"
         },
         {
-          "title": "JSON Assets Demo",
-          "href": "/examples/json-assets-demo",
-          "icon": "file-text"
-        },
-        {
           "title": "Role Management Demo",
           "href": "/examples/role-management-demo",
-          "icon": "settings"
+          "icon": "users-gear"
+        },
+        {
+          "title": "JSON Assets Demo",
+          "href": "/examples/json-assets-demo",
+          "icon": "file-code"
         }
       ]
     }
