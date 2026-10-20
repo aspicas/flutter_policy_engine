@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/logo.png" width="160" alt="flutter_policy_engine logo">
+</p>
+
 # flutter_policy_engine
 
 A lightweight, extensible policy engine for Flutter that supports **Role-Based

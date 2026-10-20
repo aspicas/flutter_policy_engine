@@ -1,6 +1,18 @@
 {
   "name": "Flutter Policy Engine",
   "description": "A lightweight, extensible policy engine for Flutter with RBAC, basic ABAC, and reactive widgets",
+  "logo": {
+    "light": "/assets/logo.png",
+    "dark": "/assets/logo.png"
+  },
+  "favicon": "/assets/favicon.png",
+  "socialPreview": "/assets/social-preview.png",
+  "theme": {
+    "primary": "#1E88E5"
+  },
+  "social": {
+    "github": "aspicas/flutter_policy_engine"
+  },
   "sidebar": [
     {
       "group": "Getting Started",
